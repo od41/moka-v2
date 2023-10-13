@@ -10,7 +10,7 @@ import Modal from "@/components/modal";
 import type { Metadata } from 'next'
 import { constants } from "@/constants";
 
-export const metadata: Metadata = {
+const metadata: Metadata = {
   title: constants.appName,
   description: constants.twitterText,
 }
