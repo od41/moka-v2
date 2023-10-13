@@ -55,7 +55,7 @@ const Modal = ({ children }: { children?: React.ReactNode }) => {
           >
 
             {isConnected ? <div>
-              <div className="text-sm">You're connected</div>
+              <div className="text-sm">You&apos;re connected</div>
               <button 
               className="border mt-4 px-14 py-3 text-sm font-light rounded-md " 
               onClick={() => disconnect()}
