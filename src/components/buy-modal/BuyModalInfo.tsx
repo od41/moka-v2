@@ -18,6 +18,8 @@ import { useState } from 'react';
 import { nearToYocto } from '@/lib/numbers';
 import { TokenListData } from '@/types/types';
 import { serif } from '@/app/layout';
+import { removeItemsBeforeColon } from '@/utils/removeItemsBeforeColon'
+import toast from 'react-hot-toast';
 
 function AvailableNftComponent({
   data,
@@ -32,6 +34,8 @@ function AvailableNftComponent({
     tokenId,
     tokensTotal,
     isTokenListLoading,
+    metadataId,
+    bookTitle
   } = data;
   const { openModal } = useApp();
 
@@ -49,8 +53,9 @@ function AvailableNftComponent({
     type: TransactionSuccessEnum.MAKE_OFFER,
     args: {
       tokenId,
-      // @ts-ignore
-      price: nearToYocto(currentPrice.toString()),
+      bookTitle,
+      // // @ts-ignore
+      // price: nearToYocto(currentPrice.toString()),
     },
   };
 
@@ -58,7 +63,7 @@ function AvailableNftComponent({
     const wallet = await selector.wallet();
 
     await execute(
-      { wallet, callbackArgs: callback },
+      { wallet, callbackUrl: `${process.env.NEXT_PUBLIC_APP_BASE_URL}/library/${removeItemsBeforeColon(metadataId!)}`, callbackArgs: callback },
       {
         ...buy({
           contractAddress: nftContractId,
@@ -73,6 +78,16 @@ function AvailableNftComponent({
         }),
       },
     ) as FinalExecutionOutcome;
+
+    toast.promise(
+      new Promise(()=>{return null}),
+       {
+         loading: "You'll be redirected to your wallet",
+         success: <b>Payment confirmed!</b>,
+         error: <b>Something went wrong</b>,
+       }
+     );
+    
   };
 
   // handler function to call the wallet methods to proceed the buy.

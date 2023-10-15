@@ -8,6 +8,7 @@ import { useApp } from "@/providers/app";
 import BuyModal from "@/components/buy-modal/BuyModal"
 import { serif } from "@/app/layout";
 import { Spinner } from "../Spinner";
+import { PriceInUsd } from "../feed/price-in-usd";
 
 interface BookDetailsTemplateProps {
     bookData: any;
@@ -53,7 +54,7 @@ export default function BookDetailsTemplate({ params, isOwned = false, bookData,
   return (
     <main className="mt-[72px] px-4 lg:px-12 mx-auto flex flex-col items-center justify-center space-y-4 md:mb-8">
       <div>
-        <div className="grid grid-cols-1 md:grid-cols-[45%_1fr] gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-[45%_1fr] gap-8 max-w-[920px]">
           <Image
             key={params.slug}
             src={bookData.media}
@@ -74,14 +75,22 @@ export default function BookDetailsTemplate({ params, isOwned = false, bookData,
             {isOwned ? <>
             <button onClick={handleRead} className="w-full mt-4 bg-[#3F305B] hover:bg-[#614F82] uppercase font-semibold text-sm text-white py-3 rounded-full">Read</button>
           </>
-          : <>
-            <button onClick={() => handleBuy(bookData.metadata_id)} className="w-full mt-4 bg-[#3F305B] hover:bg-[#614F82] uppercase font-semibold text-sm text-white py-3 rounded-full">Buy</button>
-            </>
+          : <div className="flex flex-col items-center justify-center ">
+            <button 
+              onClick={() => handleBuy(bookData.metadata_id)} 
+              className="w-full mt-4 bg-[#3F305B] hover:bg-[#614F82] uppercase font-semibold text-sm text-white py-3 rounded-full"
+            >
+              Buy
+            </button>
+            <div className="flex gap-1 mt-2 items-center justify-center ">
+              <PriceInUsd price={bookData.price} />
+            </div>
+            </div>
           }
           </div>
           <div className="mx-24">
         {!!showBuyModal && (
-          <BuyModal closeModal={handleCloseBuyModal} item={{ metadataId: bookData.metadata_id }} />
+          <BuyModal closeModal={handleCloseBuyModal} item={{ metadataId: bookData.metadata_id, bookTitle: bookData.title }} />
         )}
       </div>
           

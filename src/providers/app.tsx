@@ -3,12 +3,10 @@ import { useRouter } from "next/navigation";
 import { useWallet } from "@mintbase-js/react";
 import { uploadReference } from "@mintbase-js/storage";
 import { constants } from "@/constants";
-import { Heebo } from "next/font/google";
 import "../style/global.css";
 import { generateRandomId } from "@/utils/generateRandomId";
 import { convertBase64ToFile } from "@/utils/base64ToFile";
-
-const heebo = Heebo({ subsets: ["latin"] });
+import {Toaster} from 'react-hot-toast'
 
 export const AppContext = createContext<{
   cameraRef: React.MutableRefObject<any> | undefined;
@@ -128,11 +126,11 @@ export const AppProvider = ({ children }: { children: React.ReactNode }) => {
   return (
     <>
       {" "}
-      <style jsx global>{`
+      {/* <style jsx global>{`
         html {
           font-family: ${heebo.style.fontFamily};
         }
-      `}</style>
+      `}</style> */}
       <AppContext.Provider
         value={{
           cameraRef,
@@ -147,6 +145,7 @@ export const AppProvider = ({ children }: { children: React.ReactNode }) => {
           isLoading: isLoading,
         }}
       >
+        <Toaster/>
         {children}
       </AppContext.Provider>
     </>

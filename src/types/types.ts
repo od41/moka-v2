@@ -41,6 +41,8 @@ export interface TokenListData {
   marketId?: string
   tokenKey?: string
   nftContractId?: string
+  metadataId?: string
+  bookTitle?: string
 }
 
 export interface SelectedNft {

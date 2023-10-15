@@ -10,9 +10,10 @@ function BuyModal({
   closeModal: () => void
   item: any
 }): JSX.Element {
-  const { metadataId } = item;
+  const { metadataId, bookTitle } = item;
 
   const modalInfo = useMetadataByMetadataId({ metadataId });
+  const newModalInfo = {metadataId, bookTitle, ...modalInfo}
 
   if (modalInfo?.isTokenListLoading) {
     return (
@@ -24,7 +25,7 @@ function BuyModal({
 
   return (
     <BuyModalTemplate closeModal={closeModal}>
-      <BuyModalInfo data={modalInfo} />
+      <BuyModalInfo data={newModalInfo} />
     </BuyModalTemplate>
   );
 }

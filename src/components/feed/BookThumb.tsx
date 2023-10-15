@@ -8,9 +8,7 @@ import Link from "next/link";
 import { removeItemsBeforeColon } from "@/utils/removeItemsBeforeColon";
 import { serif } from "@/app/layout";
 
-import { parseYoctoToNear } from "@/lib/numbers";
-import { useNearPrice } from "@mintbase-js/react";
-import { NearSymbol } from "@/components/near-symbol";
+import { PriceInUsd } from "./price-in-usd";
 
 interface BookThumbProps {
   token: any;
@@ -25,18 +23,6 @@ const BookThumb = ({ token, index, isOwned=false }: BookThumbProps) => {
   const datePublished = new Date(createdAt)
   const printAbleDate = new Intl.DateTimeFormat("en-US", {month: "short", year: "numeric"}).format(datePublished)
   const [error, setError] = useState(false);
-  const [isLoadingPrice, setIsLoadingPrice] = useState(true)
-  const [bookPriceInUsd, setBookPriceInUsd] = useState("0")
-
-  const {nearPrice, error: nearPriceError} = useNearPrice()
-
-  useEffect(() => {
-    if(nearPrice){
-      const _bookPriceInUsd = parseYoctoToNear(token?.price) * nearPrice;
-      setBookPriceInUsd(_bookPriceInUsd.toFixed(2))
-      setIsLoadingPrice(false)
-    }
-  }, [nearPrice])
 
   const handleError = () => {
     setError(true);
@@ -87,11 +73,7 @@ const BookThumb = ({ token, index, isOwned=false }: BookThumbProps) => {
             <div className="text-[13px] md:text-lg lg:text-xl leading-snug text-gray-400">{author}</div>
             <div className="flex justify-between items-center w-full">
               <span className="text-[13px] md:text-lg lg:text-xl text-gray-400">{printAbleDate}</span>
-              {!isOwned && <span
-                  className="flex items-center text-gray-600 rounded text-[13px] md:text-lg lg:text-xl"
-                >
-                  ${bookPriceInUsd} in <NearSymbol />
-                </span>}
+              {!isOwned && <PriceInUsd price={token?.price} />}
             </div>
           </div>
         </Link>

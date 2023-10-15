@@ -7,6 +7,41 @@ import { useRouter } from "next/navigation";
 import { useApp } from "@/providers/app";
 import BookDetailsTemplate from '@/components/pages/book-details'
 import { Spinner } from "@/components/Spinner";
+import toast from "react-hot-toast";
+import { useSearchParams } from 'next/navigation'
+import { MINSTA_META } from "@/data/fallback";
+import { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: process.env.NEXT_PUBLIC_META_TITLE ?? MINSTA_META.title,
+  description:
+    process.env.NEXT_PUBLIC_META_DESCRIPTION ?? MINSTA_META.description,
+    
+  openGraph: {
+    title: process.env.NEXT_PUBLIC_META_TITLE ?? MINSTA_META.title,
+    description:
+      process.env.NEXT_PUBLIC_META_DESCRIPTION ?? MINSTA_META.description,
+    images: [
+      {
+        type: "image/png",
+        url: process.env.NEXT_PUBLIC_META_IMAGE ?? MINSTA_META.image,
+        width: "1200",
+        height: "630",
+      },
+    ],
+  },
+
+  twitter: {
+    card: "summary_large_image",
+    title: process.env.NEXT_PUBLIC_META_TITLE ?? MINSTA_META.title,
+    description:
+      process.env.NEXT_PUBLIC_META_DESCRIPTION ?? MINSTA_META.description,
+    siteId: "1467726470533754880",
+    creator: "Mintbase",
+    images: process.env.NEXT_PUBLIC_META_IMAGE ?? MINSTA_META.image,
+  },
+  
+};
 
 export default function BookDetails({ params }: { params: { slug: string } }) {
   const [error, setError] = useState(false);
@@ -15,8 +50,11 @@ export default function BookDetails({ params }: { params: { slug: string } }) {
   const { activeAccountId, isConnected } = useWallet()
   const { push } = useRouter();
   const { openModal } = useApp();
-
-
+  
+  const searchParams = useSearchParams()
+ 
+  const newBookArgs = searchParams.get('signMeta')
+  const boughtBookTitle = JSON.parse(newBookArgs!).args?.bookTitle
 
   // get book data
   const args = {
@@ -37,6 +75,13 @@ export default function BookDetails({ params }: { params: { slug: string } }) {
       setBookData(data?.data?.book[0])
     }
   }, [data, isLoading])
+
+  
+
+  if(boughtBookTitle != "") {
+    // you just bought a book
+    toast.success(`Yay! ${boughtBookTitle} is now part of your collection`)
+  }
 
   // display a loading UI
   if (isPageLoading) {

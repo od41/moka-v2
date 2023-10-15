@@ -36,6 +36,17 @@ const FetchBookQueryWithAccount = `
         }
         reference_blob
     }
+    metadata: mb_views_nft_tokens_with_listing(
+      where: {nft_contract_id: {_eq: $contractAddress}}
+      order_by: {minted_timestamp: desc, metadata_id: asc}
+      limit: 1
+      distinct_on: metadata_id
+    ) {
+      id: token_id
+      metadata_id
+      price
+      currency
+    }
   }
 `;
 
@@ -55,6 +66,14 @@ const FetchBookQueryNoAccount = `
           attribute_value
         } 
         reference_blob
+    }
+    metadata: mb_views_nft_tokens_with_listing(
+      where: {nft_contract_id: {_eq: $contractAddress}, metadata_id: {_eq: $metadataId}}
+    ) {
+      id: token_id
+      metadata_id
+      price
+      currency
     }
   }
 `;
