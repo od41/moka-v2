@@ -8,11 +8,6 @@ import BookDetailsTemplate from '@/components/pages/book-details'
 import { Spinner } from "@/components/Spinner";
 import toast from "react-hot-toast";
 import { useSearchParams } from 'next/navigation'
-import { Metadata } from 'next'
- 
-export const metadata: Metadata = {
-  title: 'Moka ',
-}
 
 export default function BookDetails({ params }: { params: { slug: string } }) {
   const [error, setError] = useState(false);
