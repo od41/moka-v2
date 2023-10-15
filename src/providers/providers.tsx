@@ -13,17 +13,17 @@ const Providers = ({ children }: { children: React.ReactNode }) => {
     <WalletContextProvider
       contractAddress={constants.tokenContractAddress}
       network={constants.network as Network}
-      additionalWallets={[
+      // additionalWallets={[
           // setupNearWallet(),
           // setupMyNearWallet(),
         //@ts-ignore
-        setupAuthWallet({
-          networkId: constants.network as "testnet" | "mainnet",
-          relayerUrl: "/api/relay",
-          signInContractId: constants.tokenContractAddress,
-          walletUrl: constants.mintbaseWalletUrl,
-        })
-      ]}
+        // setupAuthWallet({
+        //   networkId: constants.network as "testnet" | "mainnet",
+        //   relayerUrl: "/api/relay",
+        //   signInContractId: constants.tokenContractAddress,
+        //   walletUrl: constants.mintbaseWalletUrl,
+        // })
+      // ]}
     >
       <AppProvider>
         <DataProvider>{children}</DataProvider>

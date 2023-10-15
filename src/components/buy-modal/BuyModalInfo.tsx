@@ -61,6 +61,7 @@ function AvailableNftComponent({
 
   const singleBuy = async () => {
     const wallet = await selector.wallet();
+    console.log("wallet: ", wallet)
 
     await execute(
       { wallet, callbackUrl: `${process.env.NEXT_PUBLIC_APP_BASE_URL}/library/${removeItemsBeforeColon(metadataId!)}`, callbackArgs: callback },
