@@ -28,11 +28,15 @@ export default function BookDetails({ params }: { params: { slug: string } }) {
     metadataId: params.slug
   }
 
-  const { data, isLoading } = useGetBook(args);
+  const { data, isLoading, refetchBook } = useGetBook(args);
 
   const handleError = () => {
     setError(true);
   };
+
+  useEffect(() => {
+    refetchBook()
+  }, [isConnected, activeAccountId])
 
 
   useEffect(() => {
@@ -43,7 +47,6 @@ export default function BookDetails({ params }: { params: { slug: string } }) {
   }, [data, isLoading])
 
   useEffect(() => {
-    console.log(newBookArgs)
     if(newBookArgs) {
       setBoughtBookTitle(JSON.parse(newBookArgs!).args?.bookTitle)
       console.log('insidenewbook')
@@ -54,11 +57,6 @@ export default function BookDetails({ params }: { params: { slug: string } }) {
       toast.success(`Yay! ${boughtBookTitle} is now part of your collection`)
     }
   }, [newBookArgs, boughtBookTitle])
-  
-
-  
-
-  
 
   // display a loading UI
   if (isPageLoading) {
@@ -70,6 +68,8 @@ export default function BookDetails({ params }: { params: { slug: string } }) {
     openModal("default");
     return <></>;
   }
+
+  console.log('book & account', bookData, isConnected)
   
   if (!bookData && isConnected) {
     alert("you don't own this book")
