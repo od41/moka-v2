@@ -17,11 +17,16 @@ export default function BookDetails({ params }: { params: { slug: string } }) {
   const { activeAccountId, isConnected } = useWallet()
   const { push } = useRouter();
   const { openModal } = useApp();
+  const [boughtBookTitle, setBoughtBookTitle] = useState(null)
   
   const searchParams = useSearchParams()
  
   const newBookArgs = searchParams.get('signMeta')
-  const boughtBookTitle = JSON.parse(newBookArgs!).args?.bookTitle
+  console.log(newBookArgs)
+  if(newBookArgs) {
+    setBoughtBookTitle(JSON.parse(newBookArgs!).args?.bookTitle)
+    console.log('insidenewbook')
+  }
 
   // get book data
   const args = {
@@ -45,7 +50,7 @@ export default function BookDetails({ params }: { params: { slug: string } }) {
 
   
 
-  if(boughtBookTitle != "") {
+  if(boughtBookTitle) {
     // you just bought a book
     toast.success(`Yay! ${boughtBookTitle} is now part of your collection`)
   }
