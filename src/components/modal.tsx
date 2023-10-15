@@ -63,7 +63,7 @@ const Modal = ({ children }: { children?: React.ReactNode }) => {
               Disconnect <span className="font-semibold">{activeAccountId}</span>
             </button>
             </div> : <button
-              className="gradientButton text-primaryBtnText rounded px-14 py-3 text-sm font-light"
+              className="w-full mt-4 bg-[#3F305B] hover:bg-[#614F82] uppercase font-semibold text-sm text-white py-3 rounded-full"
               onClick={() => connect()}
             >
               Connect
