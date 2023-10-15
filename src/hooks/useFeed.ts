@@ -25,7 +25,7 @@ query minsta_fetch_store_feed_listed_tokens($contractAddress: String, $limit: In
       } 
     }
   tokens: mb_views_nft_tokens_with_listing(
-    where: {nft_contract_id: {_eq: $contractAddress}}
+    where: {nft_contract_id: {_eq: $contractAddress}, price: {_neq: 0}}
     order_by: {minted_timestamp: desc, metadata_id: asc}
     offset: $offset
     limit: $limit

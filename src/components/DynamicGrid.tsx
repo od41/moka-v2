@@ -41,7 +41,7 @@ export const DynamicGrid = ({
   return (
     <ul
       // className={`w-full grid ${cols} ${colsMd} ${colsLg} ${colsXl} ${colsXXl} ${colsXXXL} ${gapSizeMobile} md:${gapSize} ${margin} `}
-      className={`w-full grid grid-flow-row-dense ${cols} ${colsMd} ${colsLg} ${colsXl} ${colsXXl} ${colsXXXL} ${gapSizeMobile} md:${gapSize} h-auto `}
+      className={`w-full grid grid-flow-row-dense grid-cols-2 ${colsMd} ${colsLg} ${colsXl} ${colsXXl} ${colsXXXL} ${gapSizeMobile} md:${gapSize} h-auto `}
     >
       {children}
     </ul>
