@@ -2,9 +2,11 @@
 
 import { constants } from "@/constants";
 import { useApp } from "@/providers/app";
-import { useWallet } from "@mintbase-js/react";
 import React, { useEffect } from "react";
 import InlineSVG from "react-inlinesvg";
+import {
+  useAccount
+} from "@particle-network/connectkit";
 
 const RewardsModal = ({
   children,
@@ -14,7 +16,7 @@ const RewardsModal = ({
   texts: any;
 }) => {
   const { isRewardsModalOpen, closeModal } = useApp();
-  const { connect, isConnected, activeAccountId } = useWallet();
+  const { isConnected } = useAccount();
 
   useEffect(() => {
     if (!isRewardsModalOpen) return;
@@ -41,7 +43,7 @@ const RewardsModal = ({
         className="bg-mainBg rounded-xl shadow-lg max-w-md mx-auto flex flex-col h-auto"
         onClick={stopPropagation}
       >
-        <div className="overflow-y-auto flex-1 h-auto w-full rounded-t-lg text-modalText p-5 max-w-md mx-auto overflow-y-auto flex flex-col">
+        <div className="flex-1 h-auto w-full rounded-t-lg text-modalText p-5 max-w-md mx-auto overflow-y-auto flex flex-col">
           <div className="mb-8 flex flex-col gap-2 items-center mt-4">
             <h1 className="text-3xl font-bold">{"Rewards"}</h1>
           </div>

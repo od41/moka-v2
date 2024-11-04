@@ -1,17 +1,20 @@
 "use client";
 import { useEffect, useState } from "react";
 import { useGetBook } from "@/hooks/useGetBook";
-import { useWallet } from "@mintbase-js/react";
 import { useApp } from "@/providers/app";
 import BookDetailsTemplate from "@/components/pages/book-details";
 import { Spinner } from "@/components/Spinner";
+import {
+  useAccount
+} from "@particle-network/connectkit";
 
 export default function BookDetails({ params }: { params: { slug: string } }) {
   const [error, setError] = useState(false);
   const [showBuyModal, setShowBuyModal] = useState(false);
   const [bookData, setBookData] = useState<any>({});
   const [isPageLoading, setIsPageLoading] = useState(true)
-  const { isConnected } = useWallet()
+  
+  const { address, isConnected } = useAccount()
   const { openModal } = useApp();
 
   // get book data

@@ -1,19 +1,21 @@
 "use client";
 import { useEffect, useState } from "react";
 import { useGetBook } from "@/hooks/useGetBook";
-import { useWallet } from "@mintbase-js/react";
 import { useRouter } from "next/navigation";
 import { useApp } from "@/providers/app";
 import BookDetailsTemplate from '@/components/pages/book-details'
 import { Spinner } from "@/components/Spinner";
 import toast from "react-hot-toast";
 import { useSearchParams } from 'next/navigation'
+import {
+  useAccount
+} from "@particle-network/connectkit";
 
 export default function BookDetails({ params }: { params: { slug: string } }) {
   const [error, setError] = useState(false);
   const [bookData, setBookData] = useState<any>({});
   const [isPageLoading, setIsPageLoading] = useState(true)
-  const { activeAccountId, isConnected } = useWallet()
+  const { address, isConnected } = useAccount()
   const { push } = useRouter();
   const { openModal } = useApp();
   const [boughtBookTitle, setBoughtBookTitle] = useState(null)
@@ -24,7 +26,7 @@ export default function BookDetails({ params }: { params: { slug: string } }) {
 
   // get book data
   const args = {
-    accountId: isConnected ? activeAccountId : "",
+    accountId: isConnected ? address : "",
     metadataId: params.slug
   }
 
@@ -36,7 +38,7 @@ export default function BookDetails({ params }: { params: { slug: string } }) {
 
   useEffect(() => {
     refetchBook()
-  }, [isConnected, activeAccountId])
+  }, [isConnected, address])
 
 
   useEffect(() => {

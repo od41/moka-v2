@@ -3,13 +3,18 @@
 import { serif } from "@/app/layout";
 import { MINSTA_TEXTS } from "@/data/fallback";
 import { useApp } from "@/providers/app";
-import { useWallet } from "@mintbase-js/react";
 import React, { useEffect } from "react";
 import InlineSVG from "react-inlinesvg";
+import {
+  useAccount,
+  useDisconnect,
+  ConnectButton
+} from "@particle-network/connectkit";
 
 const Modal = ({ children }: { children?: React.ReactNode }) => {
   const { isMainModalOpen, closeModal } = useApp();
-  const { connect, disconnect, isConnected, activeAccountId } = useWallet();
+  const { isConnected, address } = useAccount();
+  const { disconnect } = useDisconnect();
 
   const texts = {
     about: {
@@ -60,14 +65,9 @@ const Modal = ({ children }: { children?: React.ReactNode }) => {
               className="border mt-4 px-14 py-3 text-sm font-light rounded-md " 
               onClick={() => disconnect()}
             >
-              Disconnect <span className="font-semibold">{activeAccountId}</span>
+              Disconnect <span className="font-semibold">{address}</span>
             </button>
-            </div> : <button
-              className="w-full mt-4 bg-[#3F305B] hover:bg-[#614F82] uppercase font-semibold text-sm text-white py-3 rounded-full"
-              onClick={() => connect()}
-            >
-              Connect
-            </button>
+            </div> : <ConnectButton />
             }
           </div>
 

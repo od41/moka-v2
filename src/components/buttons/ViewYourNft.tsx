@@ -2,11 +2,11 @@
 import React from "react";
 import Link from "next/link";
 import { constants } from "@/constants";
-import { useWallet } from "@mintbase-js/react";
 import InlineSVG from "react-inlinesvg";
+import { useAccount } from "@particle-network/connectkit";
 
 const ViewYourNfts = () => {
-  const { activeAccountId, isConnected } = useWallet();
+  const { address, isConnected } = useAccount();
 
   return isConnected ? (
     <div className="flex gap-2 items-center">
@@ -14,7 +14,7 @@ const ViewYourNfts = () => {
         target="_blank"
         rel="noopener noreferrer"
         passHref
-        href={`${constants.mintbaseBaseUrl}/human/${activeAccountId}/owned/0`}
+        href={`${constants.mintbaseBaseUrl}/human/${address}/owned/0`}
         className="text-linkColor text-sm"
       >
         View your NFTs

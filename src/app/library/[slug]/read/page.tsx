@@ -2,16 +2,18 @@
 import { useState, useEffect } from "react";
 import { useGetBook } from "@/hooks/useGetBook";
 import { EpubReader } from "@/components/pages/epub-reader";
-import { useWallet } from "@mintbase-js/react";
+import {
+  useAccount
+} from "@particle-network/connectkit";
 
 export default function BookReader({ params }: { params: { slug: string } }) {
   const [error, setError] = useState(false);
   const [bookData, setBookData] = useState(undefined)
-  const { activeAccountId } = useWallet()
+  const { address } = useAccount()
 
   // get book data
   const args = {
-    accountId: activeAccountId, // @TODO: replace with whatever account is signed in
+    accountId: address, // @TODO: replace with whatever account is signed in
     metadataId: params.slug
   }
   
@@ -20,7 +22,7 @@ export default function BookReader({ params }: { params: { slug: string } }) {
 
   useEffect(() => {
     refetchBook();
-  }, [activeAccountId]);
+  }, [address]);
 
   useEffect(() => {
     if(data || !isLoading){

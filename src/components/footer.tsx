@@ -2,10 +2,11 @@
 
 import { constants } from "@/constants";
 import { useApp } from "@/providers/app";
-import { useWallet } from "@mintbase-js/react";
 import { usePathname } from "next/navigation";
 import { useRouter } from "next/navigation";
-import InlineSVG from "react-inlinesvg";
+import {
+  useAccount
+} from "@particle-network/connectkit";
 
 export const FooterButton = ({ onClick }: { onClick: any }) => (
   <button
@@ -28,7 +29,7 @@ export const FooterButton = ({ onClick }: { onClick: any }) => (
 const Footer = () => {
   const pathname = usePathname();
   const { push } = useRouter();
-  const { isConnected } = useWallet();
+  const { isConnected } = useAccount();
 
   const { takePicture, openModal } = useApp();
 

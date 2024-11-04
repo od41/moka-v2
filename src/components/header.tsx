@@ -1,15 +1,27 @@
 "use client";
 import { constants } from "@/constants";
 import { useApp } from "@/providers/app";
-import { useWallet } from "@mintbase-js/react";
+
 import { usePathname, useRouter } from "next/navigation";
-import InlineSVG from "react-inlinesvg";
+
 import Link from 'next/link'
 import { serif } from "@/app/layout";
 
+// Particle imports
+import {
+  ConnectButton,
+  useAccount,
+  useDisconnect,
+  usePublicClient,
+  useParticleAuth,
+  useWallets,
+} from "@particle-network/connectkit";
+
 const Header = () => {
   const pathname = usePathname();
-  const { isConnected } = useWallet();
+  // const { isConnected } = useWallets();
+  const { address, isConnected, isConnecting, isDisconnected, chainId } =
+    useAccount();
   const { push } = useRouter();
   const { openModal } = useApp();
 

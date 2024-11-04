@@ -3,23 +3,25 @@
 import { useState, useEffect } from "react";
 import { useMyBooks } from "@/hooks/useMyBooks";
 import { constants } from "@/constants";
-import { useWallet } from "@mintbase-js/react";
 import { PageTemplate } from "@/components/pages/page-template";
 import { Spinner } from "@/components/Spinner";
+import {
+  useAccount
+} from "@particle-network/connectkit";
 
 export default function Library() {
-  const { activeAccountId } = useWallet()
+  const { address } = useAccount()
   const {
     data,
     isLoading: isDataLoading,
     isFetching,
     refetchBooks,
-  } = useMyBooks({ accountId: activeAccountId, contractAddress: constants.tokenContractAddress });
+  } = useMyBooks({ accountId: address, contractAddress: constants.tokenContractAddress });
 
 
   useEffect(() => {
     refetchBooks();
-  }, [activeAccountId]);
+  }, [address]);
 
 
   if (isDataLoading) {

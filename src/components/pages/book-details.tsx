@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from "react";
 import Image from "next/image";
-import { useWallet } from "@mintbase-js/react";
 import { useRouter } from "next/navigation";
 import { useApp } from "@/providers/app";
 import BuyModal from "@/components/buy-modal/BuyModal"

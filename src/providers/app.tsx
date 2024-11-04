@@ -1,6 +1,5 @@
 import React, { useContext, useState, createContext } from "react";
 import { useRouter } from "next/navigation";
-import { useWallet } from "@mintbase-js/react";
 import { uploadReference } from "@mintbase-js/storage";
 import { constants } from "@/constants";
 import "../style/global.css";
@@ -50,7 +49,7 @@ export const AppProvider = ({ children }: { children: React.ReactNode }) => {
     React.MutableRefObject<any> | undefined
   >(undefined);
   const [currentPhoto, setCurrentPhoto] = useState(false);
-  const { selector, activeAccountId } = useWallet();
+  // const { selector, activeAccountId } = useWallet();
   const [isLoading, setLoading] = useState(false);
 
   const { push } = useRouter();
@@ -80,8 +79,8 @@ export const AppProvider = ({ children }: { children: React.ReactNode }) => {
   };
 
   const _mintImage = async (photo: string) => {
-    if (!activeAccountId) return null;
-    const wallet = await selector.wallet();
+    // if (!activeAccountId) return null;
+    // const wallet = await selector.wallet();
     setLoading(true);
 
     const refObject = {
@@ -98,29 +97,29 @@ export const AppProvider = ({ children }: { children: React.ReactNode }) => {
     const domain = currentUrl.hostname;
     const port = currentUrl.port;
 
-    const result = await wallet?.signAndSendTransaction({
-      signerId: activeAccountId,
-      receiverId: constants.proxyContractAddress,
-      actions: [
-        {
-          type: "FunctionCall",
-          params: {
-            methodName: "mint",
-            args: {
-              metadata: JSON.stringify({
-                reference: uploadedData?.id,
-                extra: null,
-              }),
-              nft_contract_id: constants.tokenContractAddress,
-            },
-            gas: "200000000000000",
-            deposit: "10000000000000000000000",
-          },
-        },
-      ],
-      // @ts-ignore
-      successUrl: `${protocol}//${domain}${!port ? "" : ":" + port}`,
-    });
+    // const result = await wallet?.signAndSendTransaction({
+    //   signerId: activeAccountId,
+    //   receiverId: constants.proxyContractAddress,
+    //   actions: [
+    //     {
+    //       type: "FunctionCall",
+    //       params: {
+    //         methodName: "mint",
+    //         args: {
+    //           metadata: JSON.stringify({
+    //             reference: uploadedData?.id,
+    //             extra: null,
+    //           }),
+    //           nft_contract_id: constants.tokenContractAddress,
+    //         },
+    //         gas: "200000000000000",
+    //         deposit: "10000000000000000000000",
+    //       },
+    //     },
+    //   ],
+    //   // @ts-ignore
+    //   successUrl: `${protocol}//${domain}${!port ? "" : ":" + port}`,
+    // });
   };
 
   return (
