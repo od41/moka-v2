@@ -1,6 +1,10 @@
 "use client";
 
-import { ConnectKitProvider, createConfig } from "@particle-network/connectkit";
+import {
+  ConnectKitProvider,
+  createConfig,
+  useWallets,
+} from "@particle-network/connectkit";
 import { authWalletConnectors } from "@particle-network/connectkit/auth";
 import {
   mainnet,
@@ -8,12 +12,12 @@ import {
   baseSepolia,
 } from "@particle-network/connectkit/chains";
 import { evmWalletConnectors } from "@particle-network/connectkit/evm";
-import {
-  injected as solaInjected,
-  solanaWalletConnectors,
-} from "@particle-network/connectkit/solana";
 import { wallet, EntryPosition } from "@particle-network/connectkit/wallet";
+import { aa, SmartAccount } from "@particle-network/connectkit/aa";
 import React from "react";
+
+import { initKlaster, loadBiconomyV2Account, klasterNodeHost } from "klaster-sdk";
+import { createWalletClient, custom } from "viem";
 
 //Retrived from https://dashboard.particle.network
 const projectId = process.env.NEXT_PUBLIC_PARTICLE_PROJECT_ID as string;
@@ -72,7 +76,7 @@ const config = createConfig({
         promptPaymentPasswordSettingWhenSign: 1,
       },
     }),
-    solanaWalletConnectors(), // Optional, you need to configure it when using Solana
+    // solanaWalletConnectors(), // Optional, you need to configure it when using Solana
   ],
   plugins: [
     wallet({
@@ -80,11 +84,50 @@ const config = createConfig({
       entryPosition: EntryPosition.BR, // Alters the position in which the modal button appears upon login
       visible: true, // Dictates whether or not the wallet modal is included/visible or not
     }),
+    aa({
+      name: "COINBASE",
+      version: "1.0.0",
+    }),
   ],
-  chains: [solana, baseSepolia],
+  chains: [baseSepolia],
 });
+
+// Add Klaster initialization helper
+const initializeKlaster = async (address: `0x{string}`) => {
+  return await initKlaster({
+    accountInitData: loadBiconomyV2Account({
+      owner: address, // TODO: fix this with a real address
+    }),
+    nodeUrl: klasterNodeHost.default,
+  });
+};
+
+const initializeSmartWallet = async (primaryWallet: any) => {
+  const provider = await primaryWallet.connector.getProvider();
+  const smartAccount = new SmartAccount(provider, {
+    projectId: projectId,
+    clientKey: clientKey,
+    appId: appId,
+    aaOptions: {
+      accountContracts: {
+        // 'BICONOMY', 'CYBERCONNECT', 'SIMPLE', 'LIGHT', 'XTERIO'
+        BICONOMY: [
+          {
+            version: "2.0.0",
+            chainIds: [baseSepolia.id],
+          },
+        ],
+      },
+    },
+  });
+
+  smartAccount.setSmartAccountContract({ name: "BICONOMY", version: "2.0.0" });
+  return [smartAccount, provider];
+};
 
 // Export ConnectKitProvider to be used within your index or layout file (or use createConfig directly within those files).
 export const ParticleConnectkit = ({ children }: React.PropsWithChildren) => {
   return <ConnectKitProvider config={config}>{children}</ConnectKitProvider>;
 };
+
+export { initializeKlaster, initializeSmartWallet };
