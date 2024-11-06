@@ -1,12 +1,7 @@
-import { FinalExecutionOutcome } from "@mintbase-js/auth";
-import { useNearPrice } from "@mintbase-js/react";
-import { buy, execute, TransactionSuccessEnum } from "@mintbase-js/sdk";
 import { EState, MbAmountInput, MbInfoCard, MbText } from "mintbase-ui";
 import { useApp } from "@/providers/app";
 import {
-  useAccount,
-  useDisconnect,
-  ConnectButton,
+  useAccount
 } from "@particle-network/connectkit";
 
 /*
@@ -15,7 +10,6 @@ The component that handles the NFT Buy Information
 */
 
 import { useState } from "react";
-import { nearToYocto } from "@/lib/numbers";
 import { TokenListData } from "@/types/types";
 import { serif } from "@/app/layout";
 import { removeItemsBeforeColon } from "@/utils/removeItemsBeforeColon";
@@ -46,11 +40,10 @@ function AvailableNftComponent({
 
   const [currentPrice, setCurrentPrice] = useState(price);
   const [amount, setAmount] = useState(1);
-
-  const { nearPrice } = useNearPrice();
+  const nearPrice = 10 // @TODO: get real price
 
   const callback = {
-    type: TransactionSuccessEnum.MAKE_OFFER,
+    type: "make-offer",
     args: {
       tokenId,
       bookTitle,

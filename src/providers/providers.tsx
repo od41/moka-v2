@@ -1,14 +1,10 @@
 import DataProvider from "./data";
 import { AppProvider } from "./app";
-import {ParticleConnectkit} from "./wallet";
-import '@near-wallet-selector/modal-ui/styles.css';
+import { ParticleConnectkit } from "./wallet";
 
 const Providers = ({ children }: { children: React.ReactNode }) => {
-  
   return (
-    <ParticleConnectkit
-    >
-
+    <ParticleConnectkit>
       <AppProvider>
         <DataProvider>{children}</DataProvider>
       </AppProvider>

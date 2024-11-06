@@ -3,24 +3,36 @@
 import Link from "next/link";
 import { serif } from "../layout";
 import { useMultichain } from "@/hooks/useMultichain";
-import { parseUnits } from "viem";
+import { encodeFunctionData, parseUnits, erc20Abi } from "viem";
+import { buildItx, singleTx, rawTx } from "klaster-sdk";
+import { baseSepolia } from "viem/chains";
+import { useAccount } from "@particle-network/connectkit";
 
 export default function InvestPage() {
-  const { executeTransaction, isReady, smartAccount, customProvider } =
+  const { address } = useAccount();
+  const { executeTransaction, isReady, klaster, customProvider } =
     useMultichain();
 
   const handleTransaction = async () => {
     if (!isReady) return;
-    const address = await smartAccount!.getAddress();
-    const amountWei = parseUnits("0.01", 18);
-    console.log("start send...");
+
+    const amountWei = parseUnits("0.002", 6);
+    console.log("start send...", amountWei);
+    const sendERC20Op = rawTx({
+      gasLimit: BigInt("10000"),
+      to: "0x036CbD53842c5426634e7929541eC2318f3dCF7e", // USDC contract address on base sepolia
+      data: encodeFunctionData({
+        abi: erc20Abi,
+        functionName: "transfer",
+        args: ["0x0FC28558E05EbF831696352363c1F78B4786C4e5", amountWei],
+      }),
+    });
 
     try {
-      const tx = {
-        account: address,
-        to: "0x0FC28558E05EbF831696352363c1F78B4786C4e5",
-        value: amountWei,
-      };
+      const tx = buildItx({
+        steps: [singleTx(baseSepolia.id, sendERC20Op)],
+        feeTx: klaster!.encodePaymentFee(baseSepolia.id, "USDC"),
+      });
 
       const result = await executeTransaction(tx);
       console.log("Transaction result:", result);

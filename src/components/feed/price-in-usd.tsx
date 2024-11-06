@@ -1,5 +1,4 @@
 import { parseYoctoToNear } from '@/lib/numbers'
-import { useNearPrice } from '@mintbase-js/react'
 import {useState, useEffect} from 'react'
 import { NearSymbol } from '../near-symbol'
 
@@ -7,7 +6,7 @@ export const PriceInUsd = ({price}: {price: number}) => {
     const [isLoadingPrice, setIsLoadingPrice] = useState(true)
     const [bookPriceInUsd, setBookPriceInUsd] = useState("0")
   
-    const {nearPrice, error: nearPriceError} = useNearPrice()
+    const nearPrice = 10 // @TODO: get real price
   
     useEffect(() => {
       if(nearPrice){

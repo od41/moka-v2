@@ -1,6 +1,5 @@
 import React, { useContext, useState, createContext } from "react";
 import { useRouter } from "next/navigation";
-import { uploadReference } from "@mintbase-js/storage";
 import { constants } from "@/constants";
 import "../style/global.css";
 import { generateRandomId } from "@/utils/generateRandomId";
@@ -88,8 +87,6 @@ export const AppProvider = ({ children }: { children: React.ReactNode }) => {
       description: generateRandomId(10),
       media: convertBase64ToFile(photo),
     };
-
-    const uploadedData = await uploadReference(refObject);
 
     const currentUrl = new URL(window.location.href);
 

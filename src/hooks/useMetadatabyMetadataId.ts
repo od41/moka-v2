@@ -1,21 +1,15 @@
 /*
 
-useMetadataByMetadataId Hook
-Description: This hook calls metadataByMetadataById method from @mintbase-js/data to get the information of the current NFT opened on the BuyModal.
+ the information of the current NFT opened on the BuyModal.
 
 */
 
-import { metadataByMetadataId, ParsedDataReturn } from '@mintbase-js/data';
-import { Network } from '@mintbase-js/sdk';
-import { MetadataByMetadataIdQueryResult } from '@mintbase-js/data/lib/api/metadataByMetadataId/metadataByMetadataId.types';
-import { useQuery } from '@tanstack/react-query'
-import { parseYoctoToNear } from '@/lib/numbers';
-import { SelectedNft, TokenListData } from '@/types/types';
-import { constants } from '@/constants';
+import { useQuery } from "@tanstack/react-query";
+import { parseYoctoToNear } from "@/lib/numbers";
+import { SelectedNft, TokenListData } from "@/types/types";
+import { constants } from "@/constants";
 
-const mapMetadata = (
-  metadata: ParsedDataReturn<MetadataByMetadataIdQueryResult>,
-): Partial<TokenListData> => {
+const mapMetadata = (metadata: any): Partial<TokenListData> => {
   const firstListing = metadata?.data?.listings[0];
 
   if (!firstListing || firstListing === null) {
@@ -29,7 +23,7 @@ const mapMetadata = (
 
   const { price } = firstListing;
 
-  const prices = metadata?.data?.listings.map((elm) => ({
+  const prices = metadata?.data?.listings.map((elm: any) => ({
     price: elm.price,
     tokenId: elm.token.token_id,
   }));
@@ -49,15 +43,13 @@ const mapMetadata = (
 const useMetadataByMetadataId = ({
   metadataId,
 }: SelectedNft): Partial<TokenListData> => {
-  const TESTNET: Network =  "testnet"
-  const MAINNET: Network =  "mainnet"
-  const network = constants.network === "testnet" ? TESTNET : MAINNET
-  const {
-    isLoading,
-    data: metadata,
-  } = useQuery(
-    ['metadataByMetadataId'], 
-    () => metadataByMetadataId(metadataId, network), 
+  const TESTNET = "testnet";
+  const MAINNET = "mainnet";
+  const network = constants.network === "testnet" ? TESTNET : MAINNET;
+  const { isLoading, data: metadata } = useQuery(
+    ["metadataByMetadataId"],
+    // () => metadataByMetadataId(metadataId, network), // @TODO: replace this method
+    () => null,
     {
       retry: false,
       refetchOnWindowFocus: false,

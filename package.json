@@ -6,28 +6,14 @@
     "build:css": "node generate-css.js",
     "build": "yarn run build:css && next build",
     "dev:css": "node generate-css.js && next dev",
-    "dev": "yarn run dev:css",
+    "dev": "yarn run next dev",
     "start": "next start",
     "lint": "next lint"
   },
   "dependencies": {
     "@bundlr-network/client": "^0.7.7",
-    "@mintbase-js/auth": "0.4.1-beta.6-prerelease",
-    "@mintbase-js/data": "0.4.1-beta.6-prerelease",
-    "@mintbase-js/react": "0.4.1-beta.3",
-    "@mintbase-js/sdk": "0.4.1-beta.6-prerelease",
-    "@mintbase-js/storage": "0.4.1-beta.3",
-    "@mintbase-js/wallet": "0.4.1-feat-add-wallet-package-dfbfadb.0",
-    "@near-wallet-selector/core": "^8.5.3",
-    "@near-wallet-selector/default-wallets": "^8.1.4",
-    "@near-wallet-selector/modal-ui": "^8.2.1",
-    "@near-wallet-selector/my-near-wallet": "^8.5.3",
-    "@near-wallet-selector/near-wallet": "^8.5.3",
     "@particle-network/connectkit": "^2.0.9",
     "@tanstack/react-query": "^4.35.3",
-    "@types/node": "20.4.9",
-    "@types/react": "18.2.20",
-    "@types/react-dom": "18.2.7",
     "autoprefixer": "10.4.14",
     "big.js": "^6.2.1",
     "data-uri-to-buffer": "^5.0.1",
@@ -35,7 +21,7 @@
     "eslint": "8.46.0",
     "eslint-config-next": "13.4.13",
     "graphql": "^16.7.1",
-    "klaster-sdk": "^0.5.14",
+    "klaster-sdk": "0.5.11",
     "lodash": "^4.17.21",
     "mintbase-ui": "^1.0.1",
     "near-api-js": "^2.1.4",
@@ -54,6 +40,9 @@
     "viem": "^2"
   },
   "devDependencies": {
-    "@types/lodash": "^4.14.197"
+    "@types/lodash": "^4.14.197",
+    "@types/node": "20.4.9",
+    "@types/react": "18.2.20",
+    "@types/react-dom": "18.2.7"
   }
 }

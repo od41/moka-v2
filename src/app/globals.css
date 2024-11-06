@@ -1,17 +1,16 @@
-@import '@near-wallet-selector/modal-ui/styles.css';
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 .storeImg {
   height: 320px;
-  width:100%;
+  width: 100%;
   min-width: 320px;
 }
 
 @media (min-width: 768px) {
-  .storeImg{
-    width: 18rem!important;  
+  .storeImg {
+    width: 18rem !important;
   }
 }
 
@@ -39,7 +38,7 @@
   width: 13px;
   height: 13px;
   border-radius: 50%;
-  background: #3F305B;
+  background: #3f305b;
   animation-timing-function: cubic-bezier(0, 1, 1, 0);
 }
 
