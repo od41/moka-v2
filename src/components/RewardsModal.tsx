@@ -74,16 +74,7 @@ const RewardsModal = ({
 
           <div>
             <p className="uppercase text-xs mb-1.5 text-center">POWERED BY</p>
-            <div className="flex justify-center gap-5">
-              <InlineSVG
-                src="/images/MB_logo.svg"
-                className="fill-current text-modal"
-              />
-              <InlineSVG
-                src="/images/near_logo.svg"
-                className="fill-current text-modal"
-              />
-            </div>
+            
           </div>
         </div>
 

@@ -103,6 +103,7 @@ export const useMultichain = () => {
   return {
     klaster,
     executeTransaction,
+    unifiedBalance,
     customProvider,
     isReady: !!klaster && !!customProvider,
   };
