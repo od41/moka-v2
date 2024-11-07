@@ -64,6 +64,8 @@ describe("FundProjectToken", function () {
   describe("Price Calculations", function () {
     it("Should return correct initial price", async function () {
       const price = await token.read.getCurrentPrice();
+    
+      // When supply is 0, sqrt(0) = 0, so price should be BASE_PRICE
       expect(price).to.equal(BASE_PRICE);
     });
 

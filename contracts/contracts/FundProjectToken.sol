@@ -34,6 +34,7 @@ contract FundProjectToken is ERC20, ReentrancyGuard, Ownable {
     // Price = BASE_PRICE * sqrt(supply/PRECISION)
     function getCurrentPrice() public view returns (uint256) {
         uint256 supply = totalSupply();
+        if (supply == 0) return BASE_PRICE;
         return BASE_PRICE * _sqrt(supply * PRECISION) / PRECISION;
     }
     
