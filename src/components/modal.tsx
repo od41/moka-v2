@@ -10,7 +10,7 @@ import {
 } from "@particle-network/connectkit";
 import Link from "next/link";
 import { useMultichain } from "@/hooks/useMultichain";
-import { parseUnits, formatUnits } from "viem";
+import { formatUnits } from "viem";
 
 const Modal = ({ children }: { children?: React.ReactNode }) => {
   const { isMainModalOpen, closeModal } = useApp();
