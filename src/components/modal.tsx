@@ -16,7 +16,7 @@ const Modal = ({ children }: { children?: React.ReactNode }) => {
   const { isMainModalOpen, closeModal } = useApp();
   const { isConnected, address } = useAccount();
   const { disconnect } = useDisconnect();
-  const { unifiedBalance, klaster } = useMultichain();
+  const { unifiedBalance, smartWalletAddress } = useMultichain();
 
   useEffect(() => {
     if (!isMainModalOpen) return;
@@ -68,7 +68,7 @@ const Modal = ({ children }: { children?: React.ReactNode }) => {
                 {/* show the user their usdc/usdt balance and their funding wallet address */}
                 <div className="text-sm">
                   <span className="font-semibold">Funding Wallet:</span>{" "}
-                  {klaster?.account.uniqueAddresses}
+                  {smartWalletAddress}
                 </div>
                 <div className="text-sm">
                   <span className="font-semibold">Funding WalletBalance:</span>{" "}

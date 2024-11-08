@@ -32,8 +32,13 @@ function ProjectCreateForm() {
   const router = useRouter();
   const { address } = useAccount();
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const { walletClient, smartWalletAddress, klaster, executeTransaction } =
-    useMultichain();
+  const {
+    getQuote,
+    smartWalletAddress,
+    klaster,
+    executeTransaction,
+    getItxStatus,
+  } = useMultichain();
   const [formData, setFormData] = useState({
     title: "",
     description: "",
@@ -46,8 +51,6 @@ function ProjectCreateForm() {
     coverImage: null as File | null,
     previewBook: null as File | null,
   });
-
-  console.log("smartwalletaddress", smartWalletAddress);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -111,72 +114,79 @@ function ProjectCreateForm() {
           data: encodeFunctionData({
             abi: FACTORY_ABI,
             functionName: "createToken",
-            args: [address],
+            args: [smartWalletAddress],
           }),
-          gasLimit: BigInt("1000000"), // Adjust as needed
+          gasLimit: BigInt("1500000"), // Adjust as needed
         });
 
         // Build the interchain transaction
         const iTx = buildItx({
           steps: [singleTx(baseSepolia.id, createTokenTx)],
-          feeTx: klaster?.encodePaymentFee(baseSepolia.id, "USDC"),
+          feeTx: klaster!.encodePaymentFee(baseSepolia.id, "USDC"),
         });
 
         console.log("itx", iTx);
 
         // // Get quote for execution
-        // const quote = await klaster?.getQuote(iTx);
+        const quote = await getQuote(iTx);
+        console.log("quote", quote);
 
-        // // Sign the quote hash
-        // const signature = await walletClient.signMessage({
-        //   message: { raw: quote.itxHash },
-        //   account: address as `0x${string}`,
-        // });
         const receipt = await executeTransaction(iTx);
-        // Execute the transaction
-        // const result = await klaster.execute(quote, signature);
 
-        // Wait for receipt and decode events
-        // const receipt = await publicClient.waitForTransactionReceipt({
-        //   // hash: result.hash,
+        console.log("receipt", receipt.itxHash, receipt);
+        const status = await getItxStatus(receipt.itxHash);
+        console.log("status", status);
+        // const tokenCreatedEvent = receipt.itxHash.logs.find((log: any) => {
+        //   try {
+        //     const decodedLog = decodeEventLog({
+        //       abi: FACTORY_ABI,
+        //       data: log.data,
+        //       topics: log.topics,
+        //     });
+        //     return decodedLog.eventName === "TokenCreated";
+        //   } catch {
+        //     return false;
+        //   }
         // });
 
-        const tokenCreatedEvent = receipt.logs.find((log: any) => {
-          try {
-            const decodedLog = decodeEventLog({
-              abi: FACTORY_ABI,
-              data: log.data,
-              topics: log.topics,
-            });
-            return decodedLog.eventName === "TokenCreated";
-          } catch {
-            return false;
-          }
-        });
+        // if (!tokenCreatedEvent) {
+        //   throw new Error(
+        //     "Failed to find TokenCreated event in transaction logs"
+        //   );
+        // }
 
-        if (!tokenCreatedEvent) {
-          throw new Error(
-            "Failed to find TokenCreated event in transaction logs"
-          );
-        }
+        // const decodedEvent = decodeEventLog({
+        //   abi: FACTORY_ABI,
+        //   data: tokenCreatedEvent.data,
+        //   topics: tokenCreatedEvent.topics,
+        // });
 
-        const decodedEvent = decodeEventLog({
-          abi: FACTORY_ABI,
-          data: tokenCreatedEvent.data,
-          topics: tokenCreatedEvent.topics,
-        });
+        // // @ts-ignore
+        // const newTokenAddress = decodedEvent.args!.tokenAddress as string;
 
-        // @ts-ignore
-        const newTokenAddress = decodedEvent.args!.tokenAddress as string;
+        console.log("coverImageUrl", coverImageUrl);
+        console.log("previewUrl", previewUrl);
 
         // Save project data to Firestore
+        const formDataWithoutFiles = {
+          title: formData.title,
+          description: formData.description,
+          fundingTarget: formData.fundingTarget,
+          author: formData.author,
+          authorEmail: formData.authorEmail,
+          authorAddress: formData.authorAddress,
+          projectAddress: formData.projectAddress,
+          price: formData.price,
+          // Explicitly omitting coverImage and previewBook which contain File objects
+        };
+
         await addDoc(collection(firestore, BOOK_PROJECTS_COLLECTION), {
-          ...formData,
-          contractAddress: newTokenAddress,
+          ...formDataWithoutFiles,
+          contractAddress: "newTokenAddress",
           coverImageUrl,
           previewUrl,
           createdAt: serverTimestamp(),
-          authorWallet: address,
+          authorWallet: smartWalletAddress,
         });
 
         toast.success("Project created successfully!");

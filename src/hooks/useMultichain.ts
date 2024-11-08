@@ -9,6 +9,7 @@ import {
   buildRpcInfo,
   buildTokenMapping,
   deployment,
+  InterchainTransaction,
 } from "klaster-sdk";
 import { baseSepolia, optimismSepolia } from "viem/chains";
 
@@ -21,18 +22,18 @@ export const useMultichain = () => {
   // smart wallet address use state
   const [smartWalletAddress, setSmartWalletAddress] = useState<`0x${string}`>();
 
-  console.log("address", address);
-  console.log("primaryWallet", primaryWallet);
-
   // Add Klaster initialization helper
   const initializeKlaster = async (address: `0x{string}`) => {
     const tempKlaster = await initKlaster({
       accountInitData: loadBicoV2Account({
+        // pass this to particle wallet or pass partcle wallets here
         owner: address,
       }),
       nodeUrl: klasterNodeHost.default,
     });
-    console.log("tempKlaster", tempKlaster);
+    setKlaster(tempKlaster);
+    setSmartWalletAddress(Array.from(tempKlaster?.account.uniqueAddresses)[0]);
+
     return tempKlaster;
   };
 
@@ -41,8 +42,9 @@ export const useMultichain = () => {
       // First initialize the smart wallet
       primaryWallet.connector.getProvider().then((providerTemp) => {
         setWalletClient(providerTemp);
-        initializeKlaster(address as `0x{string}`).then(setKlaster);
-        setSmartWalletAddress(Array.from(klaster?.account.uniqueAddresses)[0]);
+        initializeKlaster(address as `0x{string}`).then(
+          (res) => "do something"
+        );
       });
     } else {
       setWalletClient(null);
@@ -50,7 +52,13 @@ export const useMultichain = () => {
     }
   }, [address, primaryWallet]);
 
-  const executeTransaction = async (itx: any) => {
+  const getQuote = async (itx: InterchainTransaction) => {
+    if (!klaster) throw new Error("Klaster not initialized");
+    const quote = await klaster.getQuote(itx);
+    return quote;
+  };
+
+  const executeTransaction = async (itx: InterchainTransaction) => {
     if (!klaster || !walletClient) throw new Error("Klaster not initialized");
 
     console.log("start execute", itx);
@@ -60,17 +68,25 @@ export const useMultichain = () => {
 
     try {
       const quote = await klaster.getQuote(itx);
+      console.log("quote", quote);
       const signature = await _provider.signMessage({
         message: { raw: quote.itxHash },
         account: primaryWallet.accounts[0] as `0x{string}`,
       });
       const receipt = await klaster.execute(quote, signature);
       console.log("execute receipt", receipt);
-      return result;
+      return receipt;
     } catch (error) {
       console.error("Transaction failed:", error);
       throw error;
     }
+  };
+
+  const getItxStatus = async (itxHash: string) => {
+    if (!klaster) throw new Error("Klaster not initialized");
+    const klasterEndpoint = "https://klaster-node.polycode.sh/v2/explorer/";
+    const status = await fetch(`${klasterEndpoint}/${itxHash}`);
+    return status;
   };
 
   useEffect(() => {
@@ -99,8 +115,6 @@ export const useMultichain = () => {
       }
     };
     getUBalances();
-
-    console.log("ubals", unifiedBalance);
   }, [klaster]);
 
   return {
@@ -110,5 +124,7 @@ export const useMultichain = () => {
     walletClient,
     isReady: !!klaster && !!walletClient,
     smartWalletAddress,
+    getQuote,
+    getItxStatus
   };
 };
