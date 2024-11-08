@@ -14,10 +14,12 @@ import { baseSepolia, optimismSepolia } from "viem/chains";
 
 export const useMultichain = () => {
   const { address } = useAccount();
-  const [customProvider, setCustomProvider] = useState<any | null>(null);
+  const [walletClient, setWalletClient] = useState<any | null>(null);
   const [klaster, setKlaster] = useState<KlasterSDK<any> | null>(null);
   const [primaryWallet] = useWallets();
   const [unifiedBalance, setUnifiedBalance] = useState<any | null>(null);
+  // smart wallet address use state
+  const [smartWalletAddress, setSmartWalletAddress] = useState<`0x${string}`>();
 
   console.log("address", address);
   console.log("primaryWallet", primaryWallet);
@@ -38,17 +40,18 @@ export const useMultichain = () => {
     if (address && primaryWallet) {
       // First initialize the smart wallet
       primaryWallet.connector.getProvider().then((providerTemp) => {
-        setCustomProvider(providerTemp);
+        setWalletClient(providerTemp);
         initializeKlaster(address as `0x{string}`).then(setKlaster);
+        setSmartWalletAddress(Array.from(klaster?.account.uniqueAddresses)[0]);
       });
     } else {
-      setCustomProvider(null);
+      setWalletClient(null);
       setKlaster(null);
     }
   }, [address, primaryWallet]);
 
   const executeTransaction = async (itx: any) => {
-    if (!klaster || !customProvider) throw new Error("Klaster not initialized");
+    if (!klaster || !walletClient) throw new Error("Klaster not initialized");
 
     console.log("start execute", itx);
 
@@ -61,8 +64,8 @@ export const useMultichain = () => {
         message: { raw: quote.itxHash },
         account: primaryWallet.accounts[0] as `0x{string}`,
       });
-      const result = await klaster.execute(quote, signature);
-      console.log("execute result", result);
+      const receipt = await klaster.execute(quote, signature);
+      console.log("execute receipt", receipt);
       return result;
     } catch (error) {
       console.error("Transaction failed:", error);
@@ -104,7 +107,8 @@ export const useMultichain = () => {
     klaster,
     executeTransaction,
     unifiedBalance,
-    customProvider,
-    isReady: !!klaster && !!customProvider,
+    walletClient,
+    isReady: !!klaster && !!walletClient,
+    smartWalletAddress,
   };
 };

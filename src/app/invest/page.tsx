@@ -10,17 +10,21 @@ import { useAccount } from "@particle-network/connectkit";
 
 import Image from "next/image";
 
-interface Project {
+interface BookProject {
   id: string;
   title: string;
   description: string;
   coverImage: string;
   fundingTarget: string;
   author: string;
+  authorEmail: string;
+  authorAddress: string;
+  projectAddress: string;
   price: string;
+  previewBook: string;
 }
 
-const ProjectCard = ({ project }: { project: Project }) => (
+const ProjectCard = ({ project }: { project: BookProject }) => (
   <div className="bg-white/5 rounded-lg p-6 hover:bg-white/10 transition-all">
     <Image
       src={project.coverImage}
@@ -48,7 +52,7 @@ const ProjectCard = ({ project }: { project: Project }) => (
 
 export default function InvestPage() {
   const { address } = useAccount();
-  const { executeTransaction, isReady, klaster, customProvider } =
+  const { executeTransaction, isReady, klaster } =
     useMultichain();
 
   const handleTransaction = async () => {
@@ -79,7 +83,7 @@ export default function InvestPage() {
     }
   };
 
-  const demoProjects: Project[] = [
+  const demoProjects: BookProject[] = [
     {
       id: "1",
       title: "Project Alpha",
@@ -87,36 +91,38 @@ export default function InvestPage() {
       coverImage: "/demo-project.jpg",
       fundingTarget: "100,000 USDC",
       author: "Team Alpha",
+      authorEmail: "alpha@gmail.com",
+      authorAddress: "0xaddress123",
+      projectAddress: "0x138383",
       price: "0.002 USDC",
+      previewBook: "https://link.com/to/book.html",
     },
     {
-      id: "1",
-      title: "Project Alpha",
-      description: "A revolutionary DeFi protocol",
-      coverImage: "/demo-project.jpg",
-      fundingTarget: "100,000 USDC",
-      author: "Team Alpha",
-      price: "0.002 USDC",
+      id: "2",
+      title: "The Future of Web3",
+      description: "An in-depth exploration of decentralized technologies",
+      coverImage: "/web3-cover.jpg",
+      fundingTarget: "50,000 USDC",
+      author: "Dr. Blockchain",
+      authorEmail: "dr.blockchain@web3.com",
+      authorAddress: "0xaddress456",
+      projectAddress: "0x247593",
+      price: "0.003 USDC",
+      previewBook: "https://link.com/to/web3book.html",
     },
     {
-      id: "1",
-      title: "Project Alpha",
-      description: "A revolutionary DeFi protocol",
-      coverImage: "/demo-project.jpg",
-      fundingTarget: "100,000 USDC",
-      author: "Team Alpha",
-      price: "0.002 USDC",
+      id: "3",
+      title: "DeFi Fundamentals",
+      description: "Understanding the basics of decentralized finance",
+      coverImage: "/defi-cover.jpg",
+      fundingTarget: "75,000 USDC",
+      author: "Alice Finance",
+      authorEmail: "alice@defi.edu",
+      authorAddress: "0xaddress789",
+      projectAddress: "0x382910",
+      price: "0.0025 USDC",
+      previewBook: "https://link.com/to/defibook.html",
     },
-    {
-      id: "1",
-      title: "Project Alpha",
-      description: "A revolutionary DeFi protocol",
-      coverImage: "/demo-project.jpg",
-      fundingTarget: "100,000 USDC",
-      author: "Team Alpha",
-      price: "0.002 USDC",
-    },
-    // Add more demo projects as needed
   ];
 
   return (
