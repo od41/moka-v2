@@ -180,7 +180,7 @@ function ProjectCreateForm() {
           // Explicitly omitting coverImage and previewBook which contain File objects
         };
 
-        await addDoc(collection(firestore, BOOK_PROJECTS_COLLECTION), {
+        const docRef = await addDoc(collection(firestore, BOOK_PROJECTS_COLLECTION), {
           ...formDataWithoutFiles,
           contractAddress: "newTokenAddress",
           coverImageUrl,
@@ -190,6 +190,7 @@ function ProjectCreateForm() {
         });
 
         toast.success("Project created successfully!");
+        router.push(`/terminal/${docRef.id}`); // Redirect to project details page
       } catch (error) {
         console.error("Contract error details:", error);
         if (error instanceof Error) {
@@ -200,7 +201,6 @@ function ProjectCreateForm() {
         throw error;
       }
 
-      router.push("/invest"); // Redirect to projects list
     } catch (error) {
       setIsSubmitting(false);
       console.error("Error creating project:", error);

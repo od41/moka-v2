@@ -9,25 +9,29 @@ import { baseSepolia } from "viem/chains";
 import { useAccount } from "@particle-network/connectkit";
 
 import Image from "next/image";
+import { collection, getDocs } from "firebase/firestore";
+import { firestore, BOOK_PROJECTS_COLLECTION } from "@/lib/firebase";
+import { useEffect, useState } from "react";
+import { toast } from "sonner";
 
 interface BookProject {
   id: string;
   title: string;
   description: string;
-  coverImage: string;
+  coverImageUrl: string;
   fundingTarget: string;
   author: string;
   authorEmail: string;
   authorAddress: string;
   projectAddress: string;
   price: string;
-  previewBook: string;
+  previewUrl: string;
 }
 
 const ProjectCard = ({ project }: { project: BookProject }) => (
   <div className="bg-white/5 rounded-lg p-6 hover:bg-white/10 transition-all">
     <Image
-      src={project.coverImage}
+      src={project.coverImageUrl}
       alt={project.title}
       width={300}
       height={200}
@@ -52,8 +56,30 @@ const ProjectCard = ({ project }: { project: BookProject }) => (
 
 export default function InvestPage() {
   const { address } = useAccount();
-  const { executeTransaction, isReady, klaster } =
-    useMultichain();
+  const { executeTransaction, isReady, klaster } = useMultichain();
+
+  const [projects, setProjects] = useState<BookProject[]>([]);
+
+  useEffect(() => {
+    const fetchProjects = async () => {
+      try {
+        const projectsRef = collection(firestore, BOOK_PROJECTS_COLLECTION);
+        const querySnapshot = await getDocs(projectsRef);
+
+        const fetchedProjects = querySnapshot.docs.map((doc) => ({
+          id: doc.id,
+          ...doc.data(),
+        })) as BookProject[];
+
+        setProjects(fetchedProjects);
+      } catch (error) {
+        console.error("Error fetching projects:", error);
+        toast.error("Failed to load projects");
+      }
+    };
+
+    fetchProjects();
+  }, []);
 
   const handleTransaction = async () => {
     if (!isReady) return;
@@ -83,48 +109,6 @@ export default function InvestPage() {
     }
   };
 
-  const demoProjects: BookProject[] = [
-    {
-      id: "1",
-      title: "Project Alpha",
-      description: "A revolutionary DeFi protocol",
-      coverImage: "/demo-project.jpg",
-      fundingTarget: "100,000 USDC",
-      author: "Team Alpha",
-      authorEmail: "alpha@gmail.com",
-      authorAddress: "0xaddress123",
-      projectAddress: "0x138383",
-      price: "0.002 USDC",
-      previewBook: "https://link.com/to/book.html",
-    },
-    {
-      id: "2",
-      title: "The Future of Web3",
-      description: "An in-depth exploration of decentralized technologies",
-      coverImage: "/web3-cover.jpg",
-      fundingTarget: "50,000 USDC",
-      author: "Dr. Blockchain",
-      authorEmail: "dr.blockchain@web3.com",
-      authorAddress: "0xaddress456",
-      projectAddress: "0x247593",
-      price: "0.003 USDC",
-      previewBook: "https://link.com/to/web3book.html",
-    },
-    {
-      id: "3",
-      title: "DeFi Fundamentals",
-      description: "Understanding the basics of decentralized finance",
-      coverImage: "/defi-cover.jpg",
-      fundingTarget: "75,000 USDC",
-      author: "Alice Finance",
-      authorEmail: "alice@defi.edu",
-      authorAddress: "0xaddress789",
-      projectAddress: "0x382910",
-      price: "0.0025 USDC",
-      previewBook: "https://link.com/to/defibook.html",
-    },
-  ];
-
   return (
     <>
       <main className="w-screen h-screen flex items-center justify-center px-4">
@@ -133,9 +117,10 @@ export default function InvestPage() {
             Projects
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {demoProjects.map((project) => (
-              <ProjectCard key={project.id} project={project} />
-            ))}
+            {projects.map((project) => {
+              console.log(project.coverImageUrl);
+              return <ProjectCard key={project.id} project={project} />;
+            })}
           </div>
         </div>
       </main>

@@ -6,23 +6,24 @@ import Footer from "@/components/footer";
 import Providers from "@/providers/providers";
 import Navigation from "@/components/navigation";
 import Modal from "@/components/modal";
-import type { Metadata } from 'next'
+import type { Metadata } from "next";
 import { constants } from "@/constants";
+import { Toaster } from "sonner";
 
 const metadata: Metadata = {
   title: constants.appName,
   description: constants.twitterText,
-}
+};
 
 export const serif = Quattrocento({
-  weight: '700',
-  subsets: ['latin'],
-  display: 'swap',
+  weight: "700",
+  subsets: ["latin"],
+  display: "swap",
 });
 
 export const sansSerif = Source_Sans_3({
-  subsets: ['latin'],
-  display: 'swap',
+  subsets: ["latin"],
+  display: "swap",
 });
 
 export default function RootLayout({
@@ -47,6 +48,7 @@ export default function RootLayout({
             <Modal></Modal>
           </Providers>
         </div>
+        <Toaster />
       </body>
     </html>
   );

@@ -1,11 +1,17 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.19;
 
-import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
-import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
-import "@openzeppelin/contracts/access/Ownable.sol";
+import "@openzeppelin/contracts-upgradeable/token/ERC20/ERC20Upgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/utils/ReentrancyGuardUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 
-contract FundProjectToken is ERC20, ReentrancyGuard, Ownable {
+contract FundProjectToken is 
+    Initializable, 
+    ERC20Upgradeable, 
+    ReentrancyGuardUpgradeable, 
+    OwnableUpgradeable 
+{
     // Constants for bonding curve calculations
     uint256 public constant PRECISION = 1e18;
     uint256 public constant BASE_PRICE = 1e15; // 0.001 ETH initial price
@@ -25,9 +31,16 @@ contract FundProjectToken is ERC20, ReentrancyGuard, Ownable {
     event TokensSold(address indexed seller, uint256 tokenAmount, uint256 ethAmount);
     event FeeCollected(uint256 feeAmount);
     
-    constructor(address _treasuryAddress) ERC20("Sqrt Pump Token", "SQRT") Ownable(msg.sender) {
-        require(_treasuryAddress != address(0), "Invalid treasury address");
-        treasuryAddress = _treasuryAddress;
+    function initialize(address _treasury, address owner) external initializer {
+        require(_treasury != address(0), "Invalid treasury address");
+        
+        // Initialize inherited contracts
+        __ERC20_init("Moka Token", "MOKA");
+        __ReentrancyGuard_init();
+        __Ownable_init(owner);
+        
+        treasuryAddress = _treasury;
+        _transferOwnership(owner);
     }
     
     // Calculate token price based on current supply using square root curve
