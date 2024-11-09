@@ -12,8 +12,7 @@ import {
   collection,
   query,
   where,
-  getDocs,
-  DocumentReference,
+  getDocs
 } from "firebase/firestore";
 import { useMultichain } from "@/hooks/useMultichain";
 

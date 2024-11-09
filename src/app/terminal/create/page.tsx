@@ -23,7 +23,6 @@ import { useMultichain } from "@/hooks/useMultichain";
 import { rawTx, buildItx, singleTx } from "klaster-sdk";
 
 import { abi as FACTORY_ABI } from "@/types/FundProjectTokenFactory.abi";
-import { exec } from "child_process";
 
 const FACTORY_CONTRACT_ADDRESS = process.env
   .NEXT_PUBLIC_FACTORY_CONTRACT_ADDRESS! as `0x${string}`;

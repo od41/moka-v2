@@ -9,7 +9,7 @@ import { collection, query, where, getDocs } from "firebase/firestore";
 import { firestore, PUBLISHED_BOOKS_COLLECTION } from "@/lib/firebase";
 import { useAccount } from "@particle-network/connectkit";
 
-export default function BookDetails({ params }: { params: { slug: string } }) {
+export default function BookDetails() {
   const { slug } = useParams();
   const [error, setError] = useState(false);
   const [bookData, setBookData] = useState<any>({});

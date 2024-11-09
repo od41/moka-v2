@@ -7,8 +7,10 @@ import { collection, query, where, getDocs } from "firebase/firestore";
 import { firestore, PUBLISHED_BOOKS_COLLECTION } from "@/lib/firebase";
 import { useMultichain } from "@/hooks/useMultichain";
 import { Book } from "@/app/library/page";
+import { useParams } from "next/navigation";
 
-export default function BookReader({ params }: { params: { slug: string } }) {
+export default function BookReader() {
+  const { slug } = useParams();
   const [error, setError] = useState(false);
   const [bookData, setBookData] = useState<Book | null>(null);
   const { isConnected } = useAccount();
@@ -18,19 +20,19 @@ export default function BookReader({ params }: { params: { slug: string } }) {
 
   useEffect(() => {
     const refetchBook = async () => {
-      if (!params.slug) return;
+      if (!slug) return;
       setIsLoading(true);
 
       try {
         const bookRef = collection(firestore, PUBLISHED_BOOKS_COLLECTION);
-        const bookQuery = query(bookRef, where("__name__", "==", params.slug));
+        const bookQuery = query(bookRef, where("__name__", "==", slug));
         const bookSnapshot = await getDocs(bookQuery);
 
         console.log(
           "bookSnapshot",
           bookSnapshot,
           bookSnapshot.empty,
-          params.slug
+          slug
         );
 
         if (bookSnapshot.empty) {
@@ -68,7 +70,7 @@ export default function BookReader({ params }: { params: { slug: string } }) {
       }
     };
     refetchBook();
-  }, [params.slug]);
+  }, [slug]);
 
   if (isLoading) {
     return <Spinner />;

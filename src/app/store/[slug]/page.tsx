@@ -7,12 +7,12 @@ import {
   useAccount
 } from "@particle-network/connectkit";
 import { useMultichain } from "@/hooks/useMultichain";
-import { firestore, USERS_COLLECTION, PUBLISHED_BOOKS_COLLECTION } from "@/lib/firebase";
+import { firestore, PUBLISHED_BOOKS_COLLECTION } from "@/lib/firebase";
 import { collection, getDocs, query, where } from "firebase/firestore";
 import { useParams } from "next/navigation";
 import { toast } from "sonner";
 
-export default function BookDetails({ params }: { params: { slug: string } }) {
+export default function BookDetails() {
   const [error, setError] = useState(false);
   const [showBuyModal, setShowBuyModal] = useState(false);
   const [bookData, setBookData] = useState<any>({});
@@ -22,12 +22,6 @@ export default function BookDetails({ params }: { params: { slug: string } }) {
   
   const { address, isConnected } = useAccount()
   const { openModal } = useApp();
-
-  // get book data
-  const args = {
-    accountId: "", // this uses the gql query without the accountId filter
-    metadataId: params.slug
-  }
 
   const handleError = () => {
     setError(true);
@@ -128,7 +122,7 @@ export default function BookDetails({ params }: { params: { slug: string } }) {
   }
 
   return (<>
-    <BookDetailsTemplate bookData={bookData} isLoading={isPageLoading} params={params} isOwned={false} />
+    <BookDetailsTemplate bookData={bookData} isLoading={isPageLoading} params={{slug: slug as string}} isOwned={false} />
     </>
   );
 }
