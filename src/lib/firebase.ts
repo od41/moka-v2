@@ -28,4 +28,6 @@ export const auth = getAuth(app);
 export const storage = getStorage(app);
 
 export const BOOK_PROJECTS_COLLECTION = "book-projects";
-export const TEMP_COLLECTION = "temp"
+export const TEMP_COLLECTION = "temp";
+export const PUBLISHED_BOOKS_COLLECTION = "published-books";
+export const USERS_COLLECTION = "users";

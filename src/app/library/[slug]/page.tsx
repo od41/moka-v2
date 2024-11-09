@@ -1,68 +1,81 @@
 "use client";
 import { useEffect, useState } from "react";
-import { useGetBook } from "@/hooks/useGetBook";
-import { useRouter } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { useApp } from "@/providers/app";
-import BookDetailsTemplate from '@/components/pages/book-details'
+import BookDetailsTemplate from "@/components/pages/book-details";
 import { Spinner } from "@/components/Spinner";
 import toast from "react-hot-toast";
-import { useSearchParams } from 'next/navigation'
-import {
-  useAccount
-} from "@particle-network/connectkit";
+import { collection, query, where, getDocs } from "firebase/firestore";
+import { firestore, PUBLISHED_BOOKS_COLLECTION } from "@/lib/firebase";
+import { useAccount } from "@particle-network/connectkit";
 
 export default function BookDetails({ params }: { params: { slug: string } }) {
+  const { slug } = useParams();
   const [error, setError] = useState(false);
   const [bookData, setBookData] = useState<any>({});
-  const [isPageLoading, setIsPageLoading] = useState(true)
-  const { address, isConnected } = useAccount()
+  const [isPageLoading, setIsPageLoading] = useState(true);
+  const { address, isConnected } = useAccount();
   const { push } = useRouter();
   const { openModal } = useApp();
-  const [boughtBookTitle, setBoughtBookTitle] = useState(null)
-  
-  const searchParams = useSearchParams()
- 
-  const newBookArgs = searchParams.get('signMeta')
 
-  // get book data
-  const args = {
-    accountId: isConnected ? address : "",
-    metadataId: params.slug
+  useEffect(() => {
+    const fetchBookData = async () => {
+      if (!slug) return;
+      setIsPageLoading(true);
+
+      try {
+        const bookRef = collection(firestore, PUBLISHED_BOOKS_COLLECTION);
+        const bookQuery = query(bookRef, where("__name__", "==", slug));
+        const bookSnapshot = await getDocs(bookQuery);
+
+        if (bookSnapshot.empty) {
+          setError(true);
+          setIsPageLoading(false);
+          return;
+        }
+
+        const bookDoc = bookSnapshot.docs[0];
+        const data = bookDoc.data();
+
+        setBookData({
+          id: bookDoc.id,
+          createdAt: data.createdAt?.toMillis(),
+          media: data.coverImageUrl,
+          title: data.title,
+          description: data.description,
+          metadata_id: bookDoc.id,
+          isOwned: true,
+          attributes: [
+            {
+              attribute_type: "type",
+              attribute_value: data.type || "book",
+            },
+          ],
+        });
+
+        setIsPageLoading(false);
+      } catch (error) {
+        console.error("Error fetching book:", error);
+        setError(true);
+        setIsPageLoading(false);
+        toast.error("Failed to load book details");
+      }
+    };
+
+    fetchBookData();
+  }, [slug]);
+
+  if (error) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[50vh]">
+        <p className="text-lg text-gray-600">Book not found</p>
+      </div>
+    );
   }
-
-  const { data, isLoading, refetchBook } = useGetBook(args);
-
-  const handleError = () => {
-    setError(true);
-  };
-
-  useEffect(() => {
-    refetchBook()
-  }, [isConnected, address])
-
-
-  useEffect(() => {
-    if (data || !isLoading) {
-      setIsPageLoading(false)
-      setBookData(data?.data?.book[0])
-    }
-  }, [data, isLoading])
-
-  useEffect(() => {
-    if(newBookArgs) {
-      setBoughtBookTitle(JSON.parse(newBookArgs!).args?.bookTitle)
-      console.log('insidenewbook')
-    }
-
-    if(boughtBookTitle) {
-      // you just bought a book
-      toast.success(`Yay! ${boughtBookTitle} is now part of your collection`)
-    }
-  }, [newBookArgs, boughtBookTitle])
 
   // display a loading UI
   if (isPageLoading) {
-    return <Spinner />
+    return <Spinner />;
   }
 
   // require user to login logged in
@@ -71,16 +84,22 @@ export default function BookDetails({ params }: { params: { slug: string } }) {
     return <></>;
   }
 
-  console.log('book & account', bookData, isConnected)
-  
+  console.log("book & account", bookData, isConnected);
+
   if (!bookData && isConnected) {
-    alert("you don't own this book")
-    push(`/`) // send back to home / store
-    return <></>
+    alert("you don't own this book");
+    push(`/`); // send back to home / store
+    return <></>;
   }
 
   return (
-  <>
-    <BookDetailsTemplate bookData={data?.data?.book[0]} isLoading={isLoading} params={params} isOwned={true} />
-  </>);
+    <>
+      <BookDetailsTemplate
+        bookData={bookData}
+        isLoading={isPageLoading}
+        params={{ slug: slug as string }}
+        isOwned={true}
+      />
+    </>
+  );
 }

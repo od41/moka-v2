@@ -4,10 +4,8 @@ import { useParams } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
 import { serif } from "@/app/layout";
-import { getDoc } from "firebase/firestore";
-import { doc } from "firebase/firestore";
-import { getFirestore } from "firebase/firestore";
-import { BOOK_PROJECTS_COLLECTION } from "@/lib/firebase";
+import { getDoc, doc } from "firebase/firestore";
+import { BOOK_PROJECTS_COLLECTION, firestore } from "@/lib/firebase";
 import { BookProject } from "@/app/terminal/page";
 import { formatEther } from "viem";
 import { toast } from "sonner";
@@ -15,6 +13,7 @@ import { useMultichain } from "@/hooks/useMultichain";
 import { EpubReader } from "@/components/pages/epub-reader";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Spinner } from "@/components/Spinner";
 
 const ProjectPage = () => {
   const { project_id } = useParams();
@@ -31,7 +30,7 @@ const ProjectPage = () => {
     const fetchProject = async () => {
       try {
         const projectRef = doc(
-          getFirestore(),
+          firestore,
           BOOK_PROJECTS_COLLECTION,
           project_id as string
         );
@@ -112,11 +111,7 @@ const ProjectPage = () => {
   }, [projectData?.projectAddress, publicClient]);
 
   if (isLoading) {
-    return (
-      <div className="w-screen h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-32 w-32 border-t-2 border-b-2 border-blue-500"></div>
-      </div>
-    );
+    return <Spinner />;
   }
 
   if (!projectData) {
