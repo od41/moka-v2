@@ -1,3 +1,4 @@
+"use client";
 import React, { useContext, useState, createContext } from "react";
 import { useRouter } from "next/navigation";
 import { constants } from "@/constants";
