@@ -1,6 +1,5 @@
 "use client";
 import { useState, useEffect } from "react";
-import { useGetBook } from "@/hooks/useGetBook";
 import { EpubReader } from "@/components/pages/epub-reader";
 import { useAccount } from "@particle-network/connectkit";
 import { Spinner } from "@/components/Spinner";

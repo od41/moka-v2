@@ -15,7 +15,7 @@ interface PageTemplateProps {
     blockedNfts?: any;
 }
 
-export const PageTemplate = ({title, data, isLoading, blockedNfts, isOwned}: PageTemplateProps) => {
+export const PageTemplate = ({title, data, isOwned}: PageTemplateProps) => {
 
 
   return (

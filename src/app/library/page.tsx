@@ -111,12 +111,7 @@ export default function Library() {
             metadata_id: doc.id,
             bookUrl: data.bookUrl,
             isOwned: true,
-            attributes: [
-              {
-                attribute_type: "type",
-                attribute_value: data.type || "book",
-              },
-            ],
+            attributes: doc.data().attributes || [],
           };
         });
 
@@ -130,8 +125,6 @@ export default function Library() {
 
     fetchFirestoreBooks();
   }, [smartWalletAddress]);
-
-  console.log("smartWalletAddress", smartWalletAddress);
 
   if (!smartWalletAddress) {
     return (
