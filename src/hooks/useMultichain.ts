@@ -12,6 +12,8 @@ import {
   InterchainTransaction,
 } from "klaster-sdk";
 import { baseSepolia, optimismSepolia } from "viem/chains";
+import { http } from "viem";
+import { createPublicClient } from "viem";
 
 export const useMultichain = () => {
   const { address } = useAccount();
@@ -117,6 +119,11 @@ export const useMultichain = () => {
     getUBalances();
   }, [klaster]);
 
+  const publicClient = createPublicClient({
+    chain: baseSepolia,
+    transport: http(),
+  });
+
   return {
     klaster,
     executeTransaction,
@@ -125,6 +132,7 @@ export const useMultichain = () => {
     isReady: !!klaster && !!walletClient,
     smartWalletAddress,
     getQuote,
-    getItxStatus
+    getItxStatus,
+    publicClient
   };
 };

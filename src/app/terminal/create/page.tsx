@@ -103,10 +103,7 @@ function ProjectCreateForm() {
         }
 
         // Initialize Viem clients
-        const publicClient = createPublicClient({
-          chain: baseSepolia,
-          transport: http(),
-        });
+        
 
         // Create the raw transaction for token creation
         const createTokenTx = rawTx({

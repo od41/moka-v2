@@ -14,7 +14,7 @@ import { firestore, BOOK_PROJECTS_COLLECTION } from "@/lib/firebase";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
-interface BookProject {
+export interface BookProject {
   id: string;
   title: string;
   description: string;
@@ -46,7 +46,7 @@ const ProjectCard = ({ project }: { project: BookProject }) => (
       <span>Price: {project.price}</span>
     </div>
     <p className="text-gray-400 text-sm mb-4">By {project.author}</p>
-    <Link href={`/invest/${project.id}`}>
+    <Link href={`/terminal/${project.id}`}>
       <button className="gradientButton text-primaryBtnText rounded px-6 py-2 w-full">
         View Project
       </button>
