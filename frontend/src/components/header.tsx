@@ -13,11 +13,11 @@ import { useAccount } from "@particle-network/connectkit";
 const navigation = {
   main: [
     { name: "Books Terminal", href: "/terminal" },
-    { name: "Library", href: "/library" },
+    { name: "Store", href: "/store" },
   ],
   authenticated: [
     { name: "Create Book Fund", href: "/terminal/create" },
-    { name: "My Books", href: "/my-books" },
+    { name: "Library", href: "/library" },
     { name: "Publish Book", href: "/publish" },
   ],
 };

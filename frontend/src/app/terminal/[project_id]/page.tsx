@@ -7,24 +7,32 @@ import { serif } from "@/app/layout";
 import { getDoc, doc } from "firebase/firestore";
 import { BOOK_PROJECTS_COLLECTION, firestore } from "@/lib/firebase";
 import { BookProject } from "@/app/terminal/page";
-import { formatEther } from "viem";
+import { encodeFunctionData, formatEther, parseEther } from "viem";
 import { toast } from "sonner";
 import { useMultichain } from "@/hooks/useMultichain";
 import { EpubReader } from "@/components/pages/epub-reader";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Spinner } from "@/components/Spinner";
+import { useAccount } from "@particle-network/connectkit";
+import { abi as TOKENS_ABI } from "@/types/FundProjectToken.abi";
 
 const ProjectPage = () => {
   const { project_id } = useParams();
   const [isPreviewOpen, setIsPreviewOpen] = useState(false);
   const [projectData, setProjectData] = useState<BookProject | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const [showBuyModal, setShowBuyModal] = useState(false);
   const [showSellModal, setShowSellModal] = useState(false);
   const [tokenAmount, setTokenAmount] = useState("");
   const [usdcValue, setUsdcValue] = useState(0);
+
+  const [currentPrice, setCurrentPrice] = useState<string>("0");
+  const [fundingReceived, setFundingReceived] = useState<string>("0");
+  const { publicClient, walletClient } = useMultichain();
+  const { address } = useAccount();
 
   useEffect(() => {
     const fetchProject = async () => {
@@ -51,11 +59,6 @@ const ProjectPage = () => {
 
     fetchProject();
   }, [project_id]);
-
-  const [currentPrice, setCurrentPrice] = useState<string>("0");
-  const [fundingReceived, setFundingReceived] = useState<string>("0");
-  const { smartWalletAddress } = useMultichain();
-  const { publicClient } = useMultichain();
 
   useEffect(() => {
     const fetchTokenData = async () => {
@@ -100,7 +103,8 @@ const ProjectPage = () => {
         const fundingInEth = formatEther(
           ((price as bigint) * (totalSupply as bigint)) / BigInt(2)
         );
-        setFundingReceived(`${Number(fundingInEth).toFixed(6)} ETH`);
+
+        setFundingReceived(`${formatEther(totalSupply)} ETH`);
       } catch (error) {
         console.error("Error fetching token data:", error);
         toast.error("Failed to load token data");
@@ -109,6 +113,84 @@ const ProjectPage = () => {
 
     fetchTokenData();
   }, [projectData?.projectAddress, publicClient]);
+
+  const handleBuyTokens = async () => {
+    if (!address) {
+      toast.error("Please connect your wallet first");
+      return;
+    }
+
+    setIsSubmitting(true);
+
+    try {
+      // Get ETH amount from input
+      if (!tokenAmount) {
+        toast.error("Please enter an amount");
+        setIsSubmitting(false);
+        return;
+      }
+
+      // Convert ETH amount to Wei
+      const weiAmount = parseEther(tokenAmount);
+
+      // Get tokens for ETH estimate
+      const tokensEstimate = await publicClient.readContract({
+        address: projectData!.projectAddress as `0x${string}`,
+        abi: TOKENS_ABI,
+        functionName: "getTokensForETH",
+        args: [weiAmount],
+      });
+
+      // Check wallet balance
+      const balance = await publicClient.getBalance({
+        address: address as `0x${string}`,
+      });
+
+      if (balance < weiAmount) {
+        toast.error("Insufficient ETH balance");
+        return;
+      }
+
+      // Send transaction
+      const txHash = await walletClient.sendTransaction({
+        account: address as `0x${string}`,
+        to: projectData!.projectAddress as `0x${string}`,
+        value: weiAmount,
+        data: encodeFunctionData({
+          abi: TOKENS_ABI,
+          functionName: "buyTokens",
+        }),
+      });
+
+      const toastId = toast.loading("Transaction pending...");
+
+      // Wait for transaction receipt
+      const receipt = await publicClient.waitForTransactionReceipt({
+        hash: txHash,
+      });
+
+      if (receipt.status === "success") {
+        toast.dismiss(toastId);
+        toast.success(
+          `Successfully purchased ${formatEther(
+            tokensEstimate as bigint
+          )} tokens!`
+        );
+      } else {
+        toast.dismiss(toastId);
+        toast.error("Transaction failed");
+      }
+    } catch (error) {
+      console.error("Error buying tokens:", error);
+      toast.error(
+        error instanceof Error ? error.message : "Failed to buy tokens"
+      );
+    } finally {
+      setIsSubmitting(false);
+    }
+    // Close modal
+    setShowBuyModal(false);
+  };
 
   if (isLoading) {
     return <Spinner />;
@@ -202,7 +284,7 @@ const ProjectPage = () => {
                     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
                       <div className="bg-white p-6 rounded-lg w-96">
                         <h3 className="text-xl mb-4">
-                          Buy {projectData.title} Tokens
+                          Buy Tokens | {projectData.title}
                         </h3>
                         <Input
                           type="number"
@@ -228,10 +310,7 @@ const ProjectPage = () => {
                             Cancel
                           </Button>
                           <Button
-                            onClick={() => {
-                              // Handle buy transaction
-                              setShowBuyModal(false);
-                            }}
+                            onClick={handleBuyTokens}
                             className="flex-1 gradientButton text-primaryBtnText rounded px-4 py-2"
                           >
                             Confirm
@@ -245,7 +324,7 @@ const ProjectPage = () => {
                     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
                       <div className="bg-white p-6 rounded-lg w-96">
                         <h3 className="text-xl mb-4">
-                          Sell {projectData.title} Tokens
+                          Sell Tokens | {projectData.title}
                         </h3>
                         <Input
                           type="number"

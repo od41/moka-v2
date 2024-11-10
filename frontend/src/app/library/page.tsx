@@ -8,13 +8,9 @@ import {
   PUBLISHED_BOOKS_COLLECTION,
   USERS_COLLECTION,
 } from "@/lib/firebase";
-import {
-  collection,
-  query,
-  where,
-  getDocs
-} from "firebase/firestore";
+import { collection, query, where, getDocs } from "firebase/firestore";
 import { useMultichain } from "@/hooks/useMultichain";
+import { useAccount } from "@particle-network/connectkit";
 
 export interface Book {
   id: string;
@@ -33,6 +29,7 @@ export interface Book {
 
 export default function Library() {
   const { smartWalletAddress } = useMultichain();
+  const { address } = useAccount();
   const [purchasedBooks, setPurchasedBooks] = useState<Book[]>([]);
   const [isDataLoading, setIsDataLoading] = useState(false);
 
@@ -125,7 +122,7 @@ export default function Library() {
     fetchFirestoreBooks();
   }, [smartWalletAddress]);
 
-  if (!smartWalletAddress) {
+  if (!address) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[50vh]">
         <p className="text-lg text-gray-600">
