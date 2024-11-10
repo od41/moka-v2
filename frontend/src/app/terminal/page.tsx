@@ -111,7 +111,7 @@ export default function InvestPage() {
 
   return (
     <>
-      <main className="w-screen h-screen flex items-center justify-center px-4">
+      <main className="w-screen h-screen flex items-center justify-center mt-[260px] px-4">
         <div className="max-w-6xl mx-auto">
           <h2 style={serif.style} className="text-3xl mb-8">
             Projects

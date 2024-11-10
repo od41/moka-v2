@@ -73,10 +73,10 @@ const config = createConfig({
       entryPosition: EntryPosition.BR, // Alters the position in which the modal button appears upon login
       visible: true, // Dictates whether or not the wallet modal is included/visible or not
     }),
-    aa({
-      name: "BICONOMY",
-      version: "2.0.0",
-    }),
+    // aa({
+    //   name: "BICONOMY",
+    //   version: "2.0.0",
+    // }),
   ],
   chains: [baseSepolia],
 });

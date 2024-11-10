@@ -10,9 +10,9 @@ contract FundProjectTokenFactory {
     
     event TokenCreated(address indexed tokenAddress, address indexed treasury, address indexed creator);
     
-    constructor() {
-        // Deploy the implementation contract once
-        tokenImplementation = address(new FundProjectToken()); // dummy treasury
+    constructor(address _implementation) {
+        require(_implementation != address(0), "Invalid implementation");
+        tokenImplementation = _implementation;
     }
     
     function createToken(address treasuryAddress) external returns (address) {
