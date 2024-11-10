@@ -1,4 +1,4 @@
 {
-  "LockModule#Lock": "0x9B233DC10BCe118fdFc3797Ac928e50f2303eBf8",
-  "FundProjectTokenFactoryModule#FundProjectTokenFactory": "0x8A51f98Cb8E6Eea703CdFA57922B0733B7eF1Ae1"
+  "FundProjectTokenFactoryModule#FundProjectToken": "0xf1f65C21aA660c3b96Cb04D4544D70D396Ba82AA",
+  "FundProjectTokenFactoryModule#FundProjectTokenFactory": "0x57e3B57BBe41c55b2B78333203E3B76070d82715"
 }

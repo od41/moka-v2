@@ -8,14 +8,19 @@ import Link from "next/link";
 import { serif } from "@/app/layout";
 
 // Particle imports
-import {
-  ConnectButton,
-  useAccount,
-  useDisconnect,
-  usePublicClient,
-  useParticleAuth,
-  useWallets,
-} from "@particle-network/connectkit";
+import { useAccount } from "@particle-network/connectkit";
+
+const navigation = {
+  main: [
+    { name: "Books Terminal", href: "/terminal" },
+    { name: "Library", href: "/library" },
+  ],
+  authenticated: [
+    { name: "Create Book Fund", href: "/terminal/create" },
+    { name: "My Books", href: "/my-books" },
+    { name: "Publish Book", href: "/publish" },
+  ],
+};
 
 const Header = () => {
   const pathname = usePathname();
@@ -44,47 +49,42 @@ const Header = () => {
           <Link
             style={serif.style}
             href="/"
-            className="text-xl font-semibold text-[#3F305B] h-8 w-8 text-headerText"
+            className="text-xl font-semibold text-[#3F305B] h-8 w-8 text-headerText hover:text-blue-600"
           >
             {constants.appName}
           </Link>
           <div className="flex gap-4 items-center">
             {isConnected && (
               <>
-                <Link
-                  className={`link ${
-                    pathname === "/terminal"
-                      ? "font-semibold text-[#3F305B]"
-                      : ""
-                  }`}
-                  href="/terminal"
-                >
-                  Books Terminal
-                </Link>
-                <Link
-                  className={`link ${
-                    pathname === "/library"
-                      ? "font-semibold text-[#3F305B]"
-                      : ""
-                  }`}
-                  href="/library"
-                >
-                  My Books
-                </Link>
-                <Link
-                  className={`link ${
-                    pathname === "/publish"
-                      ? "font-semibold text-[#3F305B]"
-                      : ""
-                  }`}
-                  href={
-                    process.env.NEXT_PUBLIC_PUBLISHER_DASHBOARD
-                      ? process.env.NEXT_PUBLIC_PUBLISHER_DASHBOARD
-                      : "/publish"
-                  }
-                >
-                  Publish
-                </Link>
+                <div className="flex gap-4 items-center">
+                  {navigation.main.map((item) => (
+                    <Link
+                      key={item.name}
+                      className={`link hover:font-medium hover:text-blue-600 ${
+                        pathname.includes(item.href)
+                          ? "font-semibold text-[#3F305B]"
+                          : ""
+                      }`}
+                      href={item.href}
+                    >
+                      {item.name}
+                    </Link>
+                  ))}
+                  <span> | </span>
+                  {navigation.authenticated.map((item) => (
+                    <Link
+                      key={item.name}
+                      className={`link hover:font-medium hover:text-blue-600 ${
+                        pathname.includes(item.href)
+                          ? "font-semibold text-[#3F305B]"
+                          : ""
+                      }`}
+                      href={item.href}
+                    >
+                      {item.name}
+                    </Link>
+                  ))}
+                </div>
               </>
             )}
             <button

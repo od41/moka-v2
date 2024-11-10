@@ -6,9 +6,9 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
-import { useAccount } from "@particle-network/connectkit";
 import { toast } from "sonner";
 import { createPublicClient, http, encodeFunctionData } from "viem";
+import { useWallets, useAccount } from "@particle-network/connectkit";
 import { baseSepolia } from "viem/chains";
 import { decodeEventLog } from "viem/utils";
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
@@ -30,10 +30,11 @@ const FACTORY_CONTRACT_ADDRESS = process.env
 function ProjectCreateForm() {
   const router = useRouter();
   const { address } = useAccount();
+  const [primaryWallet] = useWallets();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const {
     getQuote,
-    smartWalletAddress,
+    // smartWalletAddress,
     klaster,
     executeTransaction,
     getItxStatus,
@@ -57,8 +58,9 @@ function ProjectCreateForm() {
 
     try {
       try {
-        if (!smartWalletAddress || !address) {
+        if (!address) {
           toast.error("Please connect your wallet first");
+          setIsSubmitting(false);
           return;
         }
 
@@ -102,36 +104,84 @@ function ProjectCreateForm() {
         }
 
         // Initialize Viem clients
-        
+        const publicClient = createPublicClient({
+          chain: baseSepolia,
+          transport: http(),
+        });
 
-        // Create the raw transaction for token creation
-        const createTokenTx = rawTx({
+        const walletClient = await primaryWallet.getWalletClient();
+        console.log("signing address", address);
+
+        const txMessage = {
+          account: address as `0x${string}`,
+          chain: baseSepolia,
           to: FACTORY_CONTRACT_ADDRESS,
           data: encodeFunctionData({
             abi: FACTORY_ABI,
             functionName: "createToken",
-            args: [smartWalletAddress],
+            args: [address],
           }),
           gasLimit: BigInt("1500000"), // Adjust as needed
+        };
+
+        // Send the transaction and get the hash
+        const txHash = await walletClient.sendTransaction(txMessage);
+        console.log("Transaction hash:", txHash);
+
+        // Wait for transaction receipt
+        const txReceipt = await publicClient.waitForTransactionReceipt({
+          hash: txHash,
+        });
+        console.log("Transaction receipt:", txReceipt);
+
+        // Get the token address from the logs
+        const tokenCreatedLog = txReceipt.logs.find((log) => {
+          try {
+            const decodedLog = decodeEventLog({
+              abi: FACTORY_ABI,
+              data: log.data,
+              topics: log.topics,
+            });
+            return decodedLog.eventName === "TokenCreated";
+          } catch {
+            return false;
+          }
         });
 
-        // Build the interchain transaction
-        const iTx = buildItx({
-          steps: [singleTx(baseSepolia.id, createTokenTx)],
-          feeTx: klaster!.encodePaymentFee(baseSepolia.id, "USDC"),
+        if (!tokenCreatedLog) {
+          throw new Error("Failed to find TokenCreated event in transaction logs");
+        }
+
+        const decodedEvent = decodeEventLog({
+          abi: FACTORY_ABI,
+          data: tokenCreatedLog.data,
+          topics: tokenCreatedLog.topics,
         });
 
-        console.log("itx", iTx);
+        // @ts-ignore - We know this exists from the ABI
+        const newTokenAddress = decodedEvent.args.tokenAddress as `0x${string}`;
+        console.log("New token address:", newTokenAddress);
 
-        // // Get quote for execution
-        const quote = await getQuote(iTx);
-        console.log("quote", quote);
+        // Create the raw transaction for token creation
+        // const createTokenTx = rawTx(txMessage);
 
-        const receipt = await executeTransaction(iTx);
+        // // Build the interchain transaction
+        // const iTx = buildItx({
+        //   steps: [singleTx(baseSepolia.id, createTokenTx)],
+        //   feeTx: klaster!.encodePaymentFee(baseSepolia.id, "USDC"),
+        // });
 
-        console.log("receipt", receipt.itxHash, receipt);
-        const status = await getItxStatus(receipt.itxHash);
-        console.log("status", status);
+        // console.log("itx", iTx);
+
+        // // // Get quote for execution
+        // const quote = await getQuote(iTx);
+        // console.log("quote", quote);
+
+        // const receipt = await executeTransaction(iTx);
+
+        // console.log("receipt", receipt.itxHash, receipt);
+        // const status = await getItxStatus(receipt.itxHash);
+        // console.log("status", status);
         // const tokenCreatedEvent = receipt.itxHash.logs.find((log: any) => {
         //   try {
         //     const decodedLog = decodeEventLog({
@@ -170,20 +220,22 @@ function ProjectCreateForm() {
           fundingTarget: formData.fundingTarget,
           author: formData.author,
           authorEmail: formData.authorEmail,
-          authorAddress: formData.authorAddress,
-          projectAddress: formData.projectAddress,
+          authorAddress: address,
+          projectAddress: newTokenAddress,
           price: formData.price,
           // Explicitly omitting coverImage and previewBook which contain File objects
         };
 
-        const docRef = await addDoc(collection(firestore, BOOK_PROJECTS_COLLECTION), {
-          ...formDataWithoutFiles,
-          contractAddress: "newTokenAddress",
-          coverImageUrl,
-          previewUrl,
-          createdAt: serverTimestamp(),
-          authorWallet: smartWalletAddress,
-        });
+        const docRef = await addDoc(
+          collection(firestore, BOOK_PROJECTS_COLLECTION),
+          {
+            ...formDataWithoutFiles, 
+            coverImageUrl,
+            previewUrl,
+            createdAt: serverTimestamp(),
+            authorWallet: address,
+          }
+        );
 
         toast.success("Project created successfully!");
         router.push(`/terminal/${docRef.id}`); // Redirect to project details page
@@ -196,7 +248,6 @@ function ProjectCreateForm() {
         }
         throw error;
       }
-
     } catch (error) {
       setIsSubmitting(false);
       console.error("Error creating project:", error);
@@ -303,7 +354,7 @@ function ProjectCreateForm() {
       </div>
       <Button
         type="submit"
-        disabled={isSubmitting || !address || !smartWalletAddress}
+        disabled={isSubmitting || !address}
         className="w-full"
       >
         {isSubmitting ? "Creating..." : "Create Project"}

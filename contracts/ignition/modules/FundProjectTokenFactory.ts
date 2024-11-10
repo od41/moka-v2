@@ -3,24 +3,17 @@ import { buildModule } from "@nomicfoundation/hardhat-ignition/modules";
 const FundProjectTokenFactoryModule = buildModule(
   "FundProjectTokenFactoryModule",
   (m) => {
-    // First deploy the implementation contract (it won't be used directly)
+    // First deploy the implementation contract
     const fundProjectTokenImplementation = m.contract("FundProjectToken", []);
 
-    // Deploy the factory with the implementation address
-    const fundProjectTokenFactory = m.contract("FundProjectTokenFactory", []);
+    // Wait for the implementation to be deployed before deploying the factory
+    const fundProjectTokenFactory = m.contract("FundProjectTokenFactory", [
+      "0xf1f65C21aA660c3b96Cb04D4544D70D396Ba82AA",
+    ]);
 
-    // Log for debugging
-    console.log(
-      "Deployed contracts:",
-      {
-        implementation: fundProjectTokenImplementation.module.futures,
-        factory: fundProjectTokenFactory.module.futures
-      }
-    );
-
-    return { 
-      fundProjectTokenImplementation,
-      fundProjectTokenFactory 
+    return {
+      implementation: fundProjectTokenImplementation,
+      factory: fundProjectTokenFactory,
     };
   }
 );
