@@ -16,12 +16,15 @@ interface BookThumbProps {
   isOwned?: boolean;
 }
 
-const BookThumb = ({ token, index, isOwned=false }: BookThumbProps) => {
+const BookThumb = ({ token, index, isOwned = false }: BookThumbProps) => {
   const imageUrl = token?.media;
-  const {title, description, createdAt, attributes} = token
-  const author = attributes[0].attribute_value
-  const datePublished = new Date(createdAt)
-  const printAbleDate = new Intl.DateTimeFormat("en-US", {month: "short", year: "numeric"}).format(datePublished)
+  const { title, description, createdAt, attributes } = token;
+  const author = attributes[0].attribute_value;
+  const datePublished = new Date(createdAt);
+  const printAbleDate = new Intl.DateTimeFormat("en-US", {
+    month: "short",
+    year: "numeric",
+  }).format(datePublished);
   const [error, setError] = useState(false);
 
   const handleError = () => {
@@ -46,8 +49,9 @@ const BookThumb = ({ token, index, isOwned=false }: BookThumbProps) => {
         <Link
           key={`${token?.metadata_id}-${index}`}
           href={
-            isOwned ? `/library/${removeItemsBeforeColon(token?.metadata_id)}`
-            : `/store/${removeItemsBeforeColon(token?.metadata_id)}`
+            isOwned
+              ? `/library/${removeItemsBeforeColon(token?.metadata_id)}`
+              : `/store/${removeItemsBeforeColon(token?.metadata_id)}`
           } // @TODO: If the book is owned, redirect to library, by default, it should go to the store view
           rel="noopener noreferrer"
           passHref
@@ -65,15 +69,23 @@ const BookThumb = ({ token, index, isOwned=false }: BookThumbProps) => {
               placeholder="empty"
             />
           </div>
-          
 
-          
           <div className="w-full flex flex-col gap-1 mt-4">
-            <h3 style={serif.style} className="text-[15px] md:text-xl lg:text-2xl leading-tight text-gray-800">{title}</h3>
-            <div className="text-[13px] md:text-lg lg:text-xl leading-snug text-gray-400">{author}</div>
+            <h3
+              style={serif.style}
+              className="text-[15px] md:text-xl lg:text-2xl leading-tight text-gray-800"
+            >
+              {title}
+            </h3>
+            <div className="text-[13px] md:text-lg lg:text-xl leading-snug text-gray-400">
+              {author}
+            </div>
             <div className="flex justify-between items-center w-full">
-              <span className="text-[13px] md:text-lg lg:text-xl text-gray-400">{printAbleDate}</span>
-              {!isOwned && <PriceInUsd price={token?.price} />}
+              <span className="text-[13px] md:text-lg lg:text-xl text-gray-400">
+                {printAbleDate}
+              </span>
+              {/* {!isOwned && <PriceInUsd price={token?.price} />} */}
+              <span>${token?.price}</span>
             </div>
           </div>
         </Link>

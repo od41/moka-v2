@@ -22,8 +22,9 @@ import { Spinner } from "@/components/Spinner";
 import { useAccount } from "@particle-network/connectkit";
 import { abi as TOKENS_ABI } from "@/types/FundProjectToken.abi";
 import { buildItx, rawTx, singleTx, encodeBridgingOps } from "klaster-sdk";
-import { liFiBridgePlugin } from "@/hooks/lifiBridge";
+
 import { baseSepolia } from "viem/chains";
+import { acrossBridgePlugin } from "@/hooks/acrossBridge";
 
 const ProjectPage = () => {
   const { project_id } = useParams();
@@ -136,73 +137,131 @@ const ProjectPage = () => {
   }, [projectData?.projectAddress, publicClient, smartWalletAddress]);
 
   const handleBuyTokens = async () => {
-    if (!address) {
+    if (!smartWalletAddress) {
       toast.error("Please connect your wallet first");
       return;
     }
 
     setIsSubmitting(true);
+    const toastId = toast.loading("Processing buy transaction...");
 
     try {
-      // Get ETH amount from input
-      if (!tokenAmount) {
+      // Validate input
+      if (!usdcValue) {
+        toast.dismiss(toastId);
         toast.error("Please enter an amount");
         setIsSubmitting(false);
         return;
       }
 
-      // Convert ETH amount to Wei
-      const weiAmount = parseEther(tokenAmount);
+      const purchaseAmount = parseEther(usdcValue.toString());
 
-      // Get tokens for ETH estimate
-      const tokensEstimate = await publicClient.readContract({
-        address: projectData!.projectAddress as `0x${string}`,
-        abi: TOKENS_ABI,
-        functionName: "getTokensForETH",
-        args: [weiAmount],
+      // Check USDC balance
+      const usdcBalance = await mcClient.getUnifiedErc20Balance({
+        tokenMapping: mcUSDC,
+        account: klaster!.account,
       });
 
-      // Check wallet balance
-      const balance = await publicClient.getBalance({
-        address: address as `0x${string}`,
-      });
+      // If insufficient USDC, initiate bridging
+      if (usdcBalance.balance < purchaseAmount) {
+        toast.loading("Insufficient USDC. Initiating bridge...", {
+          id: toastId,
+        });
 
-      if (balance < weiAmount) {
-        toast.error("Insufficient ETH balance");
-        return;
-      }
+        // Encode bridging operations for USDC
+        const bridgingOps = await encodeBridgingOps({
+          tokenMapping: mcUSDC,
+          account: klaster!.account,
+          amount: purchaseAmount,
+          bridgePlugin: (data) => acrossBridgePlugin(data),
+          client: mcClient,
+          destinationChainId: baseSepolia.id,
+          unifiedBalance: usdcBalance,
+        });
 
-      // Send transaction
-      const txHash = await walletClient.sendTransaction({
-        account: address as `0x${string}`,
-        to: projectData!.projectAddress as `0x${string}`,
-        value: weiAmount,
-        data: encodeFunctionData({
-          abi: TOKENS_ABI,
-          functionName: "buyTokens",
-        }),
-      });
+        // Create convert operation
+        const convertOp = rawTx({
+          gasLimit: BigInt(100000),
+          to: "0x0000000000000000000000000000000000000000",
+          data: encodeFunctionData({
+            abi: TOKENS_ABI,
+            functionName: "convertToETH",
+          }),
+        });
 
-      const toastId = toast.loading("Transaction pending...");
+        // Create the buy operation that will use the converted ETH
+        const buyOp = rawTx({
+          gasLimit: BigInt(100000),
+          to: projectData!.projectAddress as `0x${string}`,
+          data: encodeFunctionData({
+            abi: TOKENS_ABI,
+            functionName: "buyTokens",
+          }),
+          value: purchaseAmount,
+        });
 
-      // Wait for transaction receipt
-      const receipt = await publicClient.waitForTransactionReceipt({
-        hash: txHash,
-      });
+        // Build the interchain transaction (iTx)
+        const iTx = buildItx({
+          steps: [
+            ...bridgingOps.steps, // First bridge USDC
+            singleTx(baseSepolia.id, convertOp), // Convert to ETH
+            singleTx(baseSepolia.id, buyOp), // Use ETH to buy tokens
+          ],
+          feeTx: klaster!.encodePaymentFee(baseSepolia.id, "USDC"),
+        });
 
-      if (receipt.status === "success") {
-        toast.dismiss(toastId);
-        toast.success(
-          `Successfully purchased ${formatEther(
-            tokensEstimate as bigint
-          )} tokens!`
+        // Get quote for execution
+        toast.loading("Getting quote for transaction...", { id: toastId });
+        const quote = await getQuote(iTx);
+        console.log("quote", quote);
+
+        // Execute the transaction
+        toast.loading("Executing transaction...", { id: toastId });
+        const receipt = await executeTransaction(iTx);
+        const status = await getItxStatus(receipt.itxHash);
+        console.log("Transaction status:", status);
+
+        // Verify all operations succeeded
+        const failedOp = status.userOps.find(
+          (op) => op.executionStatus !== "SUCCESS"
         );
+        if (failedOp) {
+          throw new Error(
+            `UserOp ${failedOp.userOpHash} failed with status: ${failedOp.executionStatus}`
+          );
+        }
+
+        // Get the final userOp and wait for its receipt
+        const finalUserOpHash =
+          status.userOps[status.userOps.length - 1].userOpHash;
+        const txReceipt = await waitForReceipt(
+          publicClient as PublicClient,
+          finalUserOpHash
+        );
+
+        // Verify the receipt status
+        if (!txReceipt || txReceipt.status !== "success") {
+          throw new Error("Transaction failed");
+        }
+
+        toast.success(
+          `Successfully purchased tokens! <a href='https://explorer.klaster.io/details/${receipt.itxHash}' target='_blank'>Check Klaster Explorer for details</a>`,
+          {
+            id: toastId,
+            duration: 5000,
+          }
+        );
+
+        // Provide explorer link
+        console.log(`https://explorer.klaster.io/details/${receipt.itxHash}`);
+        setShowBuyModal(false);
       } else {
         toast.dismiss(toastId);
         toast.error("Transaction failed");
       }
     } catch (error) {
       console.error("Error buying tokens:", error);
+      toast.dismiss(toastId);
       toast.error(
         error instanceof Error ? error.message : "Failed to buy tokens"
       );
@@ -231,21 +290,7 @@ const ProjectPage = () => {
 
       const sellAmount = parseEther(tokenAmount);
 
-      // First encode the bridging operations
-      const bridgingOps = await encodeBridgingOps({
-        tokenMapping: mcUSDC, // You'll need to define this token mapping for USDC
-        account: klaster!.account,
-        amount: sellAmount,
-        bridgePlugin: liFiBridgePlugin, // You'll need to implement this based on Klaster's bridging plugin interface
-        client: mcClient, // Your multichain client instance
-        destinationChainId: baseSepolia.id, // Base Sepolia
-        unifiedBalance: await mcClient.getUnifiedErc20Balance({
-          tokenMapping: mcUSDC,
-          account: klaster!.account,
-        }),
-      });
-
-      // Create the sell operation
+      // First, create the sell operation
       const sellOp = rawTx({
         gasLimit: BigInt(100000),
         to: projectData!.projectAddress as `0x${string}`,
@@ -256,10 +301,35 @@ const ProjectPage = () => {
         }),
       });
 
+      // Second, convert USDC to ETH
+      const convertOp = rawTx({
+        gasLimit: BigInt(100000),
+        to: "0x0000000000000000000000000000000000000000",
+        data: encodeFunctionData({
+          abi: TOKENS_ABI,
+          functionName: "convertToETH",
+        }),
+      });
+
+      // Last, encode the bridging operations
+      const bridgingOps = await encodeBridgingOps({
+        tokenMapping: mcUSDC, // You'll need to define this token mapping for USDC
+        account: klaster!.account,
+        amount: sellAmount,
+        bridgePlugin: (data) => acrossBridgePlugin(data),
+        client: mcClient, // Your multichain client instance
+        destinationChainId: baseSepolia.id, // Base Sepolia
+        unifiedBalance: await mcClient.getUnifiedErc20Balance({
+          tokenMapping: mcUSDC,
+          account: klaster!.account,
+        }),
+      });
+
       // Build the interchain transaction (iTx)
       const iTx = buildItx({
         steps: [
-          singleTx(baseSepolia.id, sellOp), // Sepolia chain ID
+          singleTx(baseSepolia.id, sellOp), // Base Sepolia chain ID
+          singleTx(baseSepolia.id, convertOp), // Base Sepolia chain ID
           ...bridgingOps.steps,
         ],
         feeTx: klaster!.encodePaymentFee(baseSepolia.id, "USDC"), // Pay fees in USDC on base sepolia
@@ -471,10 +541,10 @@ const ProjectPage = () => {
                     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
                       <div className="bg-white p-6 rounded-lg w-96">
                         <h3 className="text-xl mb-4">
-                          Sell Tokens | {projectData.title}
+                          Sell Tokens for {projectData.title}
                         </h3>
                         <label htmlFor="sell-amount" className="text-sm mb-2">
-                          Amount in USDC
+                          Token Amount
                         </label>
                         <Input
                           type="number"

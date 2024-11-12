@@ -1,8 +1,6 @@
 import { EState, MbAmountInput, MbInfoCard, MbText } from "mintbase-ui";
 import { useApp } from "@/providers/app";
-import {
-  useAccount
-} from "@particle-network/connectkit";
+import { useAccount } from "@particle-network/connectkit";
 
 /*
 Buy Modal Info:
@@ -40,7 +38,7 @@ function AvailableNftComponent({
 
   const [currentPrice, setCurrentPrice] = useState(price);
   const [amount, setAmount] = useState(1);
-  const nearPrice = 10 // @TODO: get real price
+  const nearPrice = 10; // @TODO: get real price
 
   const callback = {
     type: "make-offer",
@@ -168,19 +166,19 @@ export function BuyModalInfo({
   data: Partial<TokenListData>;
 }): JSX.Element {
   // @ts-ignore
-  if (!(data?.amountAvailable > 0)) {
-    return (
-      <div className="mt-2">
-        <div className="bg-gray-50 py-4 text-center">
-          {/* <MbText className="p-med-90 text-gray-700"> */}
-          <span style={serif.style} className="text-gray-900 text-xl">
-            Book is Unavailable
-          </span>
-          {/* </MbText> */}
-        </div>
-      </div>
-    );
-  }
+  // if (!(data?.amountAvailable > 0)) {
+  //   return (
+  //     <div className="mt-2">
+  //       <div className="bg-gray-50 py-4 text-center">
+  //         {/* <MbText className="p-med-90 text-gray-700"> */}
+  //         <span style={serif.style} className="text-gray-900 text-xl">
+  //           Book is Unavailable
+  //         </span>
+  //         {/* </MbText> */}
+  //       </div>
+  //     </div>
+  //   );
+  // }
 
   return <AvailableNftComponent data={data} />;
 }

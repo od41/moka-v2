@@ -29,6 +29,7 @@ export const StorePage = () => {
           metadata_id: doc.id,
           bookUrl: doc.data().bookUrl,
           isOwned: true,
+          price: doc.data().price,
           attributes: doc.data().attributes || [],
         })) as Book[];
         console.log("booksData", booksData);
