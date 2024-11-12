@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useAccount, useWallets } from "@particle-network/connectkit";
 import {
   type KlasterSDK,
@@ -192,30 +192,50 @@ export const useMultichain = () => {
     }
   };
 
-  const publicClient = createPublicClient({
-    chain: baseSepolia,
-    transport: http(),
-  });
-
-  // Initialize multichain client
-  const mcClient = new MultichainClient(
-    [sepolia, baseSepolia].map((x) => {
-      return {
-        chainId: x.id,
-        rpcUrl: x.id === sepolia.id ? SEPOLIA_RPC_URL : BASE_SEPOLIA_RPC_URL,
-      };
-    })
+  const publicClient = useMemo(
+    () =>
+      createPublicClient({
+        chain: baseSepolia,
+        transport: http(BASE_SEPOLIA_RPC_URL),
+      }),
+    []
   );
 
-  const mcUSDC = buildTokenMapping([
-    deployment(sepolia.id, "0x1c7D4B196Cb0C7B01d743Fbc6116a902379C7238"),
-    deployment(baseSepolia.id, "0x036CbD53842c5426634e7929541eC2318f3dCF7e"),
-  ]);
+  // Initialize multichain client
+  const mcClient = useMemo(
+    () =>
+      new MultichainClient(
+        [sepolia, baseSepolia].map((x) => {
+          return {
+            chainId: x.id,
+            rpcUrl:
+              x.id === sepolia.id ? SEPOLIA_RPC_URL : BASE_SEPOLIA_RPC_URL,
+          };
+        })
+      ),
+    []
+  );
 
-  const mcClientReadOnly = buildMultichainReadonlyClient([
-    buildRpcInfo(sepolia.id, SEPOLIA_RPC_URL),
-    buildRpcInfo(baseSepolia.id, BASE_SEPOLIA_RPC_URL),
-  ]);
+  const mcUSDC = useMemo(
+    () =>
+      buildTokenMapping([
+        deployment(sepolia.id, "0x1c7D4B196Cb0C7B01d743Fbc6116a902379C7238"),
+        deployment(
+          baseSepolia.id,
+          "0x036CbD53842c5426634e7929541eC2318f3dCF7e"
+        ),
+      ]),
+    []
+  );
+
+  const mcClientReadOnly = useMemo(
+    () =>
+      buildMultichainReadonlyClient([
+        buildRpcInfo(sepolia.id, SEPOLIA_RPC_URL),
+        buildRpcInfo(baseSepolia.id, BASE_SEPOLIA_RPC_URL),
+      ]),
+    []
+  );
 
   useEffect(() => {
     if (!klaster) return;

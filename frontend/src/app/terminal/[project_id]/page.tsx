@@ -35,10 +35,12 @@ const ProjectPage = () => {
   const [showBuyModal, setShowBuyModal] = useState(false);
   const [showSellModal, setShowSellModal] = useState(false);
   const [tokenAmount, setTokenAmount] = useState("");
-  const [usdcValue, setUsdcValue] = useState(0);
+  const [usdcValue, setUsdcValue] = useState<number>(0);
 
   const [currentPrice, setCurrentPrice] = useState<string>("0");
   const [fundingReceived, setFundingReceived] = useState<string>("0");
+  const [ethToUsdcRate, setEthToUsdcRate] = useState<number>(3319);
+  const [userTokenBalance, setUserTokenBalance] = useState<string>("0");
   const {
     publicClient,
     walletClient,
@@ -99,31 +101,31 @@ const ProjectPage = () => {
           functionName: "getCurrentPrice",
         });
 
-        // Get total supply to calculate funding received
-        const totalSupply = await publicClient.readContract({
+        if (smartWalletAddress) {
+          // Get user token balance
+          const userTokenBalance = await publicClient.readContract({
+            address: projectData.projectAddress as `0x${string}`,
+            abi: TOKENS_ABI,
+            functionName: "balanceOf",
+            args: [smartWalletAddress as `0x${string}`],
+          });
+          setUserTokenBalance(formatEther(userTokenBalance as bigint));
+        }
+
+        // Get contract ETH balance
+        const contractBalance = await publicClient.getBalance({
           address: projectData.projectAddress as `0x${string}`,
-          abi: [
-            {
-              name: "totalSupply",
-              inputs: [],
-              outputs: [{ type: "uint256" }],
-              stateMutability: "view",
-              type: "function",
-            },
-          ],
-          functionName: "totalSupply",
         });
 
         // Convert price from wei to ETH
         const priceInEth = formatEther(price as bigint);
-        setCurrentPrice(`${Number(priceInEth).toFixed(6)} ETH`);
+        const priceInUsdc = Number(priceInEth) * ethToUsdcRate;
+        setCurrentPrice(`${Number(priceInUsdc).toFixed(2)} USDC`);
 
-        // Calculate total funding received based on token supply and average price
-        const fundingInEth = formatEther(
-          ((price as bigint) * (totalSupply as bigint)) / BigInt(2)
-        );
+        const fundingReceivedInUsdc =
+          Number(formatEther(contractBalance)) * ethToUsdcRate;
 
-        setFundingReceived(`${formatEther(totalSupply)} ETH`);
+        setFundingReceived(`${fundingReceivedInUsdc.toFixed(2)} USDC`);
       } catch (error) {
         console.error("Error fetching token data:", error);
         toast.error("Failed to load token data");
@@ -131,7 +133,7 @@ const ProjectPage = () => {
     };
 
     fetchTokenData();
-  }, [projectData?.projectAddress, publicClient]);
+  }, [projectData?.projectAddress, publicClient, smartWalletAddress]);
 
   const handleBuyTokens = async () => {
     if (!address) {
@@ -412,25 +414,44 @@ const ProjectPage = () => {
                         <h3 className="text-xl mb-4">
                           Buy Tokens | {projectData.title}
                         </h3>
+                        <label htmlFor="buy-amount" className="text-sm mb-2">
+                          Amount in USDC
+                        </label>
                         <Input
                           type="number"
-                          value={tokenAmount}
+                          id="buy-amount"
+                          value={usdcValue}
                           onChange={(e) => {
-                            setTokenAmount(e.target.value);
-                            setUsdcValue(
-                              Number(e.target.value) * Number(currentPrice)
+                            setUsdcValue(Number(e.target.value));
+                            setTokenAmount(
+                              (
+                                Number(e.target.value) /
+                                Number(currentPrice.split(" ")[0])
+                              ).toString()
                             );
                           }}
                           className="w-full p-2 mb-4 rounded"
-                          placeholder="Amount of tokens"
+                          placeholder="Amount in USDC"
                         />
                         <p className="mb-4">
-                          Cost: {usdcValue.toFixed(2)} USDC
+                          Cost: {Number(tokenAmount).toFixed(2)} MOKA
+                        </p>
+                        <p className="mb-4">
+                          MOKA Balance:{" "}
+                          {userTokenBalance ? (
+                            `${userTokenBalance} MOKA`
+                          ) : (
+                            <span className="text-sm">Loading balance</span>
+                          )}
                         </p>
                         <div className="flex gap-4">
                           <Button
                             variant="outline"
-                            onClick={() => setShowBuyModal(false)}
+                            onClick={() => {
+                              setShowBuyModal(false);
+                              setTokenAmount("0");
+                              setUsdcValue("0");
+                            }}
                             className="flex-1 border border-gray-600 rounded px-4 py-2"
                           >
                             Cancel
@@ -452,13 +473,18 @@ const ProjectPage = () => {
                         <h3 className="text-xl mb-4">
                           Sell Tokens | {projectData.title}
                         </h3>
+                        <label htmlFor="sell-amount" className="text-sm mb-2">
+                          Amount in USDC
+                        </label>
                         <Input
                           type="number"
+                          id="sell-amount"
                           value={tokenAmount}
                           onChange={(e) => {
                             setTokenAmount(e.target.value);
                             setUsdcValue(
-                              Number(e.target.value) * Number(currentPrice)
+                              Number(e.target.value) *
+                                Number(currentPrice.split(" ")[0])
                             );
                           }}
                           className="w-full p-2 mb-4 rounded"
@@ -467,10 +493,22 @@ const ProjectPage = () => {
                         <p className="mb-4">
                           Value: {usdcValue.toFixed(2)} USDC
                         </p>
+                        <p className="mb-4">
+                          MOKA Balance:{" "}
+                          {userTokenBalance ? (
+                            `${userTokenBalance} MOKA`
+                          ) : (
+                            <span className="text-sm">Loading balance</span>
+                          )}
+                        </p>
                         <div className="flex gap-4">
                           <Button
                             variant="outline"
-                            onClick={() => setShowSellModal(false)}
+                            onClick={() => {
+                              setShowSellModal(false);
+                              setTokenAmount("0");
+                              setUsdcValue("0");
+                            }}
                             className="flex-1 border border-gray-600 rounded px-4 py-2"
                           >
                             Cancel
