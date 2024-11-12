@@ -450,7 +450,7 @@ const ProjectPage = () => {
                             onClick={() => {
                               setShowBuyModal(false);
                               setTokenAmount("0");
-                              setUsdcValue("0");
+                              setUsdcValue(0);
                             }}
                             className="flex-1 border border-gray-600 rounded px-4 py-2"
                           >
@@ -507,7 +507,7 @@ const ProjectPage = () => {
                             onClick={() => {
                               setShowSellModal(false);
                               setTokenAmount("0");
-                              setUsdcValue("0");
+                              setUsdcValue(0);
                             }}
                             className="flex-1 border border-gray-600 rounded px-4 py-2"
                           >
