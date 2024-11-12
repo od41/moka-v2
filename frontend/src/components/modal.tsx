@@ -71,7 +71,7 @@ const Modal = ({ children }: { children?: React.ReactNode }) => {
                   {smartWalletAddress}
                 </div>
                 <div className="text-sm">
-                  <span className="font-semibold">Funding WalletBalance:</span>{" "}
+                  <span className="font-semibold">Balance:</span>{" "}
                   {unifiedBalance ? (
                     <>
                       {formatUnits(unifiedBalance?.balance, 6).toString()} USDC
@@ -79,6 +79,10 @@ const Modal = ({ children }: { children?: React.ReactNode }) => {
                   ) : (
                     <span className="italic text-xs">Loading balance...</span>
                   )}
+                </div>
+                <div className="text-sm">
+                  <span className="font-semibold">Chains:</span> Sepolia & Base
+                  Sepolia
                 </div>
               </div>
             ) : (
@@ -89,8 +93,8 @@ const Modal = ({ children }: { children?: React.ReactNode }) => {
           <div>
             <p className="uppercase text-xs mb-1.5 text-center">built by</p>
             <div className="flex justify-center gap-5 italic">
-              <Link href={"https://odafe41.com"} target="_blank">
-                ...this guy
+              <Link href={"https://x.com/elder41_"} target="_blank">
+                Dafe
               </Link>
             </div>
           </div>

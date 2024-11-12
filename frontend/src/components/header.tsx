@@ -11,10 +11,7 @@ import { serif } from "@/app/layout";
 import { useAccount } from "@particle-network/connectkit";
 
 const navigation = {
-  main: [
-    { name: "Books Terminal", href: "/terminal" },
-    { name: "Store", href: "/store" },
-  ],
+  main: [{ name: "Books Terminal", href: "/terminal" }],
   authenticated: [
     { name: "Create Book Fund", href: "/terminal/create" },
     { name: "Library", href: "/library" },

@@ -55,9 +55,6 @@ const ProjectCard = ({ project }: { project: BookProject }) => (
 );
 
 export default function InvestPage() {
-  const { address } = useAccount();
-  const { executeTransaction, isReady, klaster } = useMultichain();
-
   const [projects, setProjects] = useState<BookProject[]>([]);
 
   useEffect(() => {
@@ -81,34 +78,6 @@ export default function InvestPage() {
     fetchProjects();
   }, []);
 
-  const handleTransaction = async () => {
-    if (!isReady) return;
-
-    const amountWei = parseUnits("0.002", 6);
-    console.log("start send...", amountWei);
-    const sendERC20Op = rawTx({
-      gasLimit: BigInt("10000"),
-      to: "0x036CbD53842c5426634e7929541eC2318f3dCF7e", // USDC contract address on base sepolia
-      data: encodeFunctionData({
-        abi: erc20Abi,
-        functionName: "transfer",
-        args: ["0x0FC28558E05EbF831696352363c1F78B4786C4e5", amountWei],
-      }),
-    });
-
-    try {
-      const tx = buildItx({
-        steps: [singleTx(baseSepolia.id, sendERC20Op)],
-        feeTx: klaster!.encodePaymentFee(baseSepolia.id, "USDC"),
-      });
-
-      const result = await executeTransaction(tx);
-      console.log("Transaction result:", result);
-    } catch (error) {
-      console.error("Transaction failed:", error);
-    }
-  };
-
   return (
     <>
       <main className="w-screen h-screen flex items-center justify-center mt-[260px] px-4">
@@ -118,7 +87,6 @@ export default function InvestPage() {
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {projects.map((project) => {
-              console.log(project.coverImageUrl);
               return <ProjectCard key={project.id} project={project} />;
             })}
           </div>

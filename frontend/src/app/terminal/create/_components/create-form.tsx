@@ -44,6 +44,7 @@ function ProjectCreateForm() {
     executeTransaction,
     getItxStatus,
     waitForReceipt,
+    BASE_SEPOLIA_RPC_URL,
   } = useMultichain();
   const [formData, setFormData] = useState({
     title: "",
@@ -70,9 +71,6 @@ function ProjectCreateForm() {
         toast.dismiss(toastLoadingId);
         return;
       }
-
-      const BASE_SEPOLIA_RPC_URL =
-        process.env.NEXT_PUBLIC_BASE_SEPOLIA_RPC_URL!;
 
       // Use Viem for regular wallet transaction
       const publicClient = createPublicClient({

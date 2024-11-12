@@ -11,6 +11,7 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@lifi/sdk": "^3.4.1",
     "@particle-network/connectkit": "^2.0.9",
     "@radix-ui/react-slot": "^1.1.0",
     "autoprefixer": "10.4.14",

@@ -1,9 +1,15 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   images: {
-    domains: [
-      "firebasestorage.googleapis.com",
-      "image-cache-service-z3w7d7dnea-ew.a.run.app",
+    remotePatterns: [
+      {
+        hostname: "firebasestorage.googleapis.com",
+        protocol: "https",
+      },
+      {
+        hostname: "image-cache-service-z3w7d7dnea-ew.a.run.app",
+        protocol: "https",
+      },
     ],
   },
   webpack: (config) => {

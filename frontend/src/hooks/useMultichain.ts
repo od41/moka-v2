@@ -10,8 +10,9 @@ import {
   buildTokenMapping,
   deployment,
   InterchainTransaction,
+  MultichainClient,
 } from "klaster-sdk";
-import { baseSepolia, optimismSepolia } from "viem/chains";
+import { baseSepolia, optimismSepolia, sepolia } from "viem/chains";
 import { http } from "viem";
 import { createPublicClient, type PublicClient } from "viem";
 
@@ -60,13 +61,18 @@ export const useMultichain = () => {
   // smart wallet address use state
   const [smartWalletAddress, setSmartWalletAddress] = useState<`0x${string}`>();
 
+  const SEPOLIA_RPC_URL = process.env.NEXT_PUBLIC_SEPOLIA_RPC_URL!;
+  const BASE_SEPOLIA_RPC_URL = process.env.NEXT_PUBLIC_BASE_SEPOLIA_RPC_URL!;
+
   // Add Klaster initialization helper
   const initializeKlaster = async (address: `0x{string}`) => {
+    const smartAccountInitData = loadBicoV2Account({
+      // pass this to particle wallet or pass partcle wallets here
+      owner: address,
+    });
+    console.log("init data", smartAccountInitData);
     const tempKlaster = await initKlaster({
-      accountInitData: loadBicoV2Account({
-        // pass this to particle wallet or pass partcle wallets here
-        owner: address,
-      }),
+      accountInitData: smartAccountInitData,
       nodeUrl: klasterNodeHost.default,
     });
     setKlaster(tempKlaster);
@@ -186,24 +192,36 @@ export const useMultichain = () => {
     }
   };
 
+  const publicClient = createPublicClient({
+    chain: baseSepolia,
+    transport: http(),
+  });
+
+  // Initialize multichain client
+  const mcClient = new MultichainClient(
+    [sepolia, baseSepolia].map((x) => {
+      return {
+        chainId: x.id,
+        rpcUrl: x.id === sepolia.id ? SEPOLIA_RPC_URL : BASE_SEPOLIA_RPC_URL,
+      };
+    })
+  );
+
+  const mcUSDC = buildTokenMapping([
+    deployment(sepolia.id, "0x1c7D4B196Cb0C7B01d743Fbc6116a902379C7238"),
+    deployment(baseSepolia.id, "0x036CbD53842c5426634e7929541eC2318f3dCF7e"),
+  ]);
+
+  const mcClientReadOnly = buildMultichainReadonlyClient([
+    buildRpcInfo(sepolia.id, SEPOLIA_RPC_URL),
+    buildRpcInfo(baseSepolia.id, BASE_SEPOLIA_RPC_URL),
+  ]);
+
   useEffect(() => {
     if (!klaster) return;
 
-    const mcClient = buildMultichainReadonlyClient([
-      buildRpcInfo(optimismSepolia.id, optimismSepolia.rpcUrls.default.http[0]),
-      buildRpcInfo(baseSepolia.id, baseSepolia.rpcUrls.default.http[0]),
-    ]);
-
-    const mcUSDC = buildTokenMapping([
-      // deployment(
-      //   optimismSepolia.id,
-      //   "0x5fd84259d66Cd46123540766Be93DFE6D43130D7"
-      // ),
-      deployment(baseSepolia.id, "0x036CbD53842c5426634e7929541eC2318f3dCF7e"),
-    ]);
-
     const getUBalances = async () => {
-      const uBal = await mcClient.getUnifiedErc20Balance({
+      const uBal = await mcClientReadOnly.getUnifiedErc20Balance({
         tokenMapping: mcUSDC,
         account: klaster.account,
       });
@@ -212,12 +230,13 @@ export const useMultichain = () => {
       }
     };
     getUBalances();
-  }, [klaster]);
-
-  const publicClient = createPublicClient({
-    chain: baseSepolia,
-    transport: http(),
-  });
+  }, [
+    klaster,
+    SEPOLIA_RPC_URL,
+    BASE_SEPOLIA_RPC_URL,
+    mcUSDC,
+    mcClientReadOnly,
+  ]);
 
   return {
     klaster,
@@ -230,5 +249,10 @@ export const useMultichain = () => {
     getItxStatus,
     publicClient,
     waitForReceipt,
+    mcClient,
+    mcClientReadOnly,
+    mcUSDC,
+    SEPOLIA_RPC_URL,
+    BASE_SEPOLIA_RPC_URL,
   };
 };

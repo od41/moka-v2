@@ -7,7 +7,12 @@ import { serif } from "@/app/layout";
 import { getDoc, doc } from "firebase/firestore";
 import { BOOK_PROJECTS_COLLECTION, firestore } from "@/lib/firebase";
 import { BookProject } from "@/app/terminal/page";
-import { encodeFunctionData, formatEther, parseEther } from "viem";
+import {
+  encodeFunctionData,
+  formatEther,
+  parseEther,
+  PublicClient,
+} from "viem";
 import { toast } from "sonner";
 import { useMultichain } from "@/hooks/useMultichain";
 import { EpubReader } from "@/components/pages/epub-reader";
@@ -16,6 +21,9 @@ import { Input } from "@/components/ui/input";
 import { Spinner } from "@/components/Spinner";
 import { useAccount } from "@particle-network/connectkit";
 import { abi as TOKENS_ABI } from "@/types/FundProjectToken.abi";
+import { buildItx, rawTx, singleTx, encodeBridgingOps } from "klaster-sdk";
+import { liFiBridgePlugin } from "@/hooks/lifiBridge";
+import { baseSepolia } from "viem/chains";
 
 const ProjectPage = () => {
   const { project_id } = useParams();
@@ -31,7 +39,18 @@ const ProjectPage = () => {
 
   const [currentPrice, setCurrentPrice] = useState<string>("0");
   const [fundingReceived, setFundingReceived] = useState<string>("0");
-  const { publicClient, walletClient } = useMultichain();
+  const {
+    publicClient,
+    walletClient,
+    klaster,
+    mcClient,
+    mcUSDC,
+    getQuote,
+    executeTransaction,
+    getItxStatus,
+    waitForReceipt,
+    smartWalletAddress,
+  } = useMultichain();
   const { address } = useAccount();
 
   useEffect(() => {
@@ -192,6 +211,113 @@ const ProjectPage = () => {
     setShowBuyModal(false);
   };
 
+  const handleSellTokens = async () => {
+    if (!smartWalletAddress) {
+      toast.error("Please connect your wallet first");
+      return;
+    }
+
+    setIsSubmitting(true);
+    const toastId = toast.loading("Processing sell transaction...");
+
+    try {
+      if (!tokenAmount) {
+        toast.dismiss(toastId);
+        toast.error("Please enter an amount");
+        return;
+      }
+
+      const sellAmount = parseEther(tokenAmount);
+
+      // First encode the bridging operations
+      const bridgingOps = await encodeBridgingOps({
+        tokenMapping: mcUSDC, // You'll need to define this token mapping for USDC
+        account: klaster!.account,
+        amount: sellAmount,
+        bridgePlugin: liFiBridgePlugin, // You'll need to implement this based on Klaster's bridging plugin interface
+        client: mcClient, // Your multichain client instance
+        destinationChainId: baseSepolia.id, // Base Sepolia
+        unifiedBalance: await mcClient.getUnifiedErc20Balance({
+          tokenMapping: mcUSDC,
+          account: klaster!.account,
+        }),
+      });
+
+      // Create the sell operation
+      const sellOp = rawTx({
+        gasLimit: BigInt(100000),
+        to: projectData!.projectAddress as `0x${string}`,
+        data: encodeFunctionData({
+          abi: TOKENS_ABI,
+          functionName: "sellTokens",
+          args: [sellAmount],
+        }),
+      });
+
+      // Build the interchain transaction (iTx)
+      const iTx = buildItx({
+        steps: [
+          singleTx(baseSepolia.id, sellOp), // Sepolia chain ID
+          ...bridgingOps.steps,
+        ],
+        feeTx: klaster!.encodePaymentFee(baseSepolia.id, "USDC"), // Pay fees in USDC on base sepolia
+      });
+
+      // Get quote for execution
+      const quote = await getQuote(iTx);
+      console.log("quote", quote);
+
+      // Execute the transaction
+      toast.loading("Executing transaction...", { id: toastId });
+      const receipt = await executeTransaction(iTx);
+      const status = await getItxStatus(receipt.itxHash);
+      console.log("Transaction status:", status);
+
+      // The status response contains the userOps array with execution details
+      // Check if any userOps failed
+      const failedOp = status.userOps.find(
+        (op) => op.executionStatus !== "SUCCESS"
+      );
+      if (failedOp) {
+        throw new Error(
+          `UserOp ${failedOp.userOpHash} failed with status: ${failedOp.executionStatus}`
+        );
+      }
+
+      // Get the final userOp and wait for its receipt
+      const finalUserOp = status.userOps[status.userOps.length - 1];
+      const txReceipt = await waitForReceipt(
+        publicClient as PublicClient,
+        finalUserOp.userOpHash
+      );
+
+      // Verify the receipt status
+      if (!txReceipt || txReceipt.status !== "success") {
+        throw new Error("Transaction failed");
+      }
+
+      toast.success(
+        "Transaction submitted! Check Klaster Explorer for status",
+        {
+          id: toastId,
+          duration: 5000,
+        }
+      );
+
+      // Provide explorer link
+      console.log(`https://explorer.klaster.io/details/${receipt.itxHash}`);
+      setShowSellModal(false);
+    } catch (error) {
+      console.error("Error in sell transaction:", error);
+      toast.dismiss(toastId);
+      toast.error(
+        error instanceof Error ? error.message : "Transaction failed"
+      );
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   if (isLoading) {
     return <Spinner />;
   }
@@ -350,10 +476,7 @@ const ProjectPage = () => {
                             Cancel
                           </Button>
                           <Button
-                            onClick={() => {
-                              // Handle sell transaction
-                              setShowSellModal(false);
-                            }}
+                            onClick={handleSellTokens}
                             className="flex-1 gradientButton text-primaryBtnText rounded px-4 py-2"
                           >
                             Confirm

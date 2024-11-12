@@ -81,6 +81,13 @@ const config = createConfig({
   chains: [baseSepolia],
 });
 
+const temp = aa({
+  name: "BICONOMY",
+  version: "2.0.0",
+});
+
+console.log("particl connect biconomy", temp(config as any));
+
 // Export ConnectKitProvider to be used within your index or layout file (or use createConfig directly within those files).
 export const ParticleConnectkit = ({ children }: React.PropsWithChildren) => {
   return <ConnectKitProvider config={config}>{children}</ConnectKitProvider>;
