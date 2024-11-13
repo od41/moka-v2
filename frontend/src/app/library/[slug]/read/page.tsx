@@ -28,12 +28,7 @@ export default function BookReader() {
         const bookQuery = query(bookRef, where("__name__", "==", slug));
         const bookSnapshot = await getDocs(bookQuery);
 
-        console.log(
-          "bookSnapshot",
-          bookSnapshot,
-          bookSnapshot.empty,
-          slug
-        );
+        console.log("bookSnapshot", bookSnapshot, bookSnapshot.empty, slug);
 
         if (bookSnapshot.empty) {
           setError(true);
@@ -55,6 +50,7 @@ export default function BookReader() {
           metadata_id: bookData.id,
           bookUrl: bookData.bookUrl,
           isOwned: true,
+          price: bookData.price,
           attributes: [
             {
               attribute_type: "type",
