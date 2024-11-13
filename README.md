@@ -24,6 +24,9 @@ It has 3 main components
 2. Klaster: orchestrate payments and withdrawals from any chain that they choose and allowing them to interact with the assets and chains they already own directly on the platform.
 3. SEDA price oracle for token asset prices, USDC/ETH & USDC/SOL prices
 
+## Architecture
+![Architecture diagram](/readme/hackathon-flowcharts.png)
+
 
 ## Future work
 1. Better tokenomics

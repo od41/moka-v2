@@ -50,6 +50,7 @@ export default function BookReader() {
           metadata_id: bookData.id,
           bookUrl: bookData.bookUrl,
           isOwned: true,
+          authorAddress: bookData.authorAddress,
           price: bookData.price,
           attributes: [
             {

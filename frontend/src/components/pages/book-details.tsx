@@ -19,9 +19,10 @@ import { arrayUnion } from "firebase/firestore";
 import { setDoc } from "firebase/firestore";
 import { doc } from "firebase/firestore";
 import { firestore } from "@/lib/firebase";
+import { Book } from "@/app/library/page";
 
 interface BookDetailsTemplateProps {
-  bookData: any;
+  bookData: Book;
   isLoading: boolean;
   isOwned?: boolean;
   params: { slug: string };

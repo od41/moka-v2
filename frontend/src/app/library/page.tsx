@@ -21,6 +21,7 @@ export interface Book {
   description: string;
   metadata_id: string;
   isOwned: boolean;
+  authorAddress: string;
   price: number;
   attributes: {
     attribute_type: string;
@@ -108,6 +109,7 @@ export default function Library() {
             metadata_id: doc.id,
             bookUrl: data.bookUrl,
             isOwned: true,
+            authorAddress: data.authorAddress,
             price: data.price,
             attributes: doc.data().attributes || [],
           };
