@@ -9,11 +9,12 @@ import { firestore, PUBLISHED_BOOKS_COLLECTION } from "@/lib/firebase";
 import { collection, getDocs, query, where } from "firebase/firestore";
 import { useParams } from "next/navigation";
 import { toast } from "sonner";
+import { Book } from "@/app/library/page";
 
 export default function BookDetails() {
   const [error, setError] = useState(false);
   const [showBuyModal, setShowBuyModal] = useState(false);
-  const [bookData, setBookData] = useState<any>({});
+  const [bookData, setBookData] = useState<Book | null>(null);
   const [isPageLoading, setIsPageLoading] = useState(true);
   const { smartWalletAddress } = useMultichain();
   const { slug } = useParams();
@@ -75,7 +76,9 @@ export default function BookDetails() {
           description: data.description,
           metadata_id: bookDoc.id,
           price: data.price,
+          authorAddress: data.authorAddress,
           isOwned: true,
+          bookUrl: "data.bookUrl",
           attributes: [
             {
               attribute_type: "type",
@@ -123,7 +126,7 @@ export default function BookDetails() {
   return (
     <>
       <BookDetailsTemplate
-        bookData={bookData}
+        bookData={bookData!}
         isLoading={isPageLoading}
         params={{ slug: slug as string }}
         isOwned={false}

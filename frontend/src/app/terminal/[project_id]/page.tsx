@@ -11,6 +11,7 @@ import {
   encodeFunctionData,
   formatEther,
   parseEther,
+  parseUnits,
   PublicClient,
 } from "viem";
 import { toast } from "sonner";
@@ -154,7 +155,7 @@ const ProjectPage = () => {
         return;
       }
 
-      const purchaseAmount = parseEther(usdcValue.toString());
+      const purchaseAmount = parseUnits(usdcValue.toString(), 6);
 
       // Check USDC balance
       const usdcBalance = await mcClient.getUnifiedErc20Balance({
@@ -288,7 +289,7 @@ const ProjectPage = () => {
         return;
       }
 
-      const sellAmount = parseEther(tokenAmount);
+      const sellAmount = parseUnits(tokenAmount, 6);
 
       // First, create the sell operation
       const sellOp = rawTx({

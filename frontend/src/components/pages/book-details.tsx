@@ -10,9 +10,9 @@ import { Spinner } from "../Spinner";
 import { PriceInUsd } from "../feed/price-in-usd";
 import { useMultichain } from "@/hooks/useMultichain";
 import { toast } from "sonner";
-import { parseEther } from "viem";
+import { parseEther, parseUnits } from "viem";
 import { useAuthCore } from "@particle-network/authkit";
-import { buildItx, encodeBridgingOps, InterchainTransaction, mcUSDC, rawTx, singleTx } from "klaster-sdk";
+import { buildItx, encodeBridgingOps, rawTx, singleTx } from "klaster-sdk";
 import { acrossBridgePlugin } from "@/hooks/acrossBridge";
 import { baseSepolia } from "viem/chains";
 import { arrayUnion } from "firebase/firestore";
@@ -38,9 +38,16 @@ export default function BookDetailsTemplate({
   const [showBuyModal, setShowBuyModal] = useState(false);
   const { openModal } = useApp();
   const { push } = useRouter();
-  
-  const {smartWalletAddress, mcClient, klaster, getItxStatus, executeTransaction} = useMultichain()
-  const {userInfo } = useAuthCore()
+
+  const {
+    smartWalletAddress,
+    mcClient,
+    mcUSDC,
+    klaster,
+    getItxStatus,
+    executeTransaction,
+  } = useMultichain();
+  const { userInfo } = useAuthCore();
 
   const handleError = () => {
     setError(true);
@@ -62,12 +69,11 @@ export default function BookDetailsTemplate({
     const toastId = toast.loading("Processing purchase...");
 
     try {
-      const price = parseEther(bookData.price.toString());
+      const price = parseUnits(bookData.price.toString(), 6);
       const adminFee = (price * BigInt(1)) / BigInt(100); // 1% fee
       const authorPayment = price - adminFee;
 
       // Get user's email from Particle
-      // const userInfo = await particleAuthCore.getUserInfo();
       if (!userInfo?.email) {
         throw new Error("Could not retrieve user email");
       }
@@ -78,94 +84,115 @@ export default function BookDetailsTemplate({
         account: klaster!.account,
       });
 
-      // If insufficient USDC, initiate bridging
+      // Show current balance to user
+      console.log("Current USDC balance:", usdcBalance.balance.toString());
+      console.log("Required amount:", price.toString());
+
       if (usdcBalance.balance < price) {
-        toast.loading("Insufficient USDC. Initiating bridge...", {
-          id: toastId,
-        });
-
-        // Encode bridging operations for USDC
-        const bridgingOps = await encodeBridgingOps({
-          tokenMapping: mcUSDC,
-          account: klaster!.account,
-          amount: price,
-          bridgePlugin: (data) => acrossBridgePlugin(data),
-          client: mcClient,
-          destinationChainId: baseSepolia.id,
-          unifiedBalance: usdcBalance,
-        });
-
-        // Create payment operations
-        const authorPaymentOp = rawTx({
-          to: bookData.authorAddress as `0x${string}`,
-          value: authorPayment,
-          gasLimit: BigInt(100000),
-        });
-
-        const adminFeeOp = rawTx({
-          to: process.env.NEXT_PUBLIC_ADMIN_ADDRESS as `0x${string}`,
-          value: adminFee,
-          gasLimit: BigInt(100000),
-        });
-
-        // Build the interchain transaction (iTx)
-        const iTx = buildItx({
-          steps: [
-            ...bridgingOps.steps,
-            singleTx(baseSepolia.id, authorPaymentOp),
-            singleTx(baseSepolia.id, adminFeeOp),
-          ],
-          feeTx: klaster!.encodePaymentFee(baseSepolia.id, "USDC"),
-        });
-
-        // Get quote and execute
-        // const quote = await getQuote(iTx);
-        const receipt = await executeTransaction(iTx);
-        const status = await getItxStatus(receipt.itxHash);
-
-        // Check for failed operations
-        const failedOp = status.userOps.find(
-          (op) => op.executionStatus !== "SUCCESS"
+        // Calculate how much more USDC is needed
+        const needed = price - usdcBalance.balance;
+        toast.dismiss(toastId);
+        toast.error(
+          `Insufficient USDC balance. You need ${needed.toString()} more USDC to complete this purchase. Please add funds to your wallet.`
         );
-        if (failedOp) {
-          throw new Error(
-            `Operation failed with status: ${failedOp.executionStatus}`
-          );
-        }
-
-        // Save purchase to Firestore
-        const userRef = doc(firestore, "users", smartWalletAddress as string);
-        await setDoc(
-          userRef,
-          {
-            purchasedBooks: arrayUnion({
-              bookTitle: bookData.title,
-              id: params.slug,
-              datePurchased: new Date().toISOString(),
-              amountPaid: bookData.price,
-            }),
-            email: userInfo.email,
-          },
-          { merge: true }
-        );
-
-        toast.success(
-          `Purchase successful! <a href='https://explorer.klaster.io/details/${receipt.itxHash}' target='_blank'>View transaction</a>`,
-          {
-            id: toastId,
-            duration: 5000,
-          }
-        );
-
-        // Redirect to library
-        push("/library");
+        return;
       }
+
+      toast.loading("Processing payment...", { id: toastId });
+
+      console.log(
+        "first",
+        bookData.authorAddress,
+        process.env.NEXT_PUBLIC_ADMIN_ADDRESS
+      );
+
+      // Create payment operations
+      const authorPaymentOp = rawTx({
+        to: bookData.authorAddress as `0x${string}`,
+        value: authorPayment,
+        gasLimit: BigInt(100000),
+      });
+
+      const adminFeeOp = rawTx({
+        to: process.env.NEXT_PUBLIC_ADMIN_ADDRESS as `0x${string}`,
+        value: adminFee,
+        gasLimit: BigInt(100000),
+      });
+
+      // Build the interchain transaction (iTx)
+      const iTx = buildItx({
+        steps: [
+          singleTx(baseSepolia.id, authorPaymentOp),
+          singleTx(baseSepolia.id, adminFeeOp),
+        ],
+        feeTx: klaster!.encodePaymentFee(baseSepolia.id, "USDC"),
+      });
+
+      // Execute transaction
+      const receipt = await executeTransaction(iTx);
+      const status = await getItxStatus(receipt.itxHash);
+
+      // Check for failed operations
+      const failedOp = status.userOps.find(
+        (op) => op.executionStatus !== "SUCCESS"
+      );
+      if (failedOp) {
+        throw new Error(
+          `Operation failed with status: ${failedOp.executionStatus}`
+        );
+      }
+
+      // Save purchase to Firestore
+      const userRef = doc(firestore, "users", smartWalletAddress as string);
+      await setDoc(
+        userRef,
+        {
+          purchasedBooks: arrayUnion({
+            bookTitle: bookData.title,
+            id: params.slug,
+            datePurchased: new Date().toISOString(),
+            amountPaid: bookData.price,
+          }),
+          email: userInfo.email,
+        },
+        { merge: true }
+      );
+
+      toast.success(
+        <div>
+          Purchase successful!{" "}
+          <a
+            href={`https://explorer.klaster.io/details/${receipt.itxHash}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="underline text-blue-500 hover:text-blue-700"
+          >
+            View transaction
+          </a>
+        </div>,
+        {
+          id: toastId,
+          duration: 5000,
+        }
+      );
+
+      // Redirect to library
+      push(`/library/${bookData.id}`);
     } catch (error) {
       console.error("Purchase error:", error);
       toast.dismiss(toastId);
-      toast.error(
-        error instanceof Error ? error.message : "Failed to complete purchase"
-      );
+      if (
+        error instanceof Error &&
+        error.message.includes("Token strategy is null")
+      ) {
+        toast.error(
+          "Insufficient funds to complete the purchase. Please add more USDC to your wallet."
+        );
+      } else {
+        toast.error(
+          error instanceof Error ? error.message : "Failed to complete purchase"
+        );
+      }
     } finally {
       setIsSubmitting(false);
     }
@@ -256,4 +283,3 @@ export default function BookDetailsTemplate({
     </main>
   );
 }
-
